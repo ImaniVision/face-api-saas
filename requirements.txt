@@ -1,0 +1,26 @@
+# FastAPI Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# ML & Computer Vision
+# Note: insightface may require Visual C++ Build Tools on Windows
+# See WINDOWS_INSTALL.md for installation help
+insightface==0.7.3
+onnxruntime==1.16.3
+opencv-python-headless==4.9.0.80  # Headless version (smaller, no GUI dependencies)
+mediapipe==0.10.9
+
+# Math & Data Processing
+numpy==1.24.3
+scikit-learn==1.4.0
+
+# Image Processing
+Pillow==10.2.0
+
+# Utilities
+pydantic==2.5.3
+python-dotenv==1.0.0
+
+# Optional: For GPU support (uncomment if you have CUDA)
+# onnxruntime-gpu==1.16.3
