@@ -1,325 +1,147 @@
-# Facial Biometric ML Service
+# Facial Biometric Auth System
 
-A production-ready, stateless ML service for facial biometric authentication using MediaPipe (face detection) and InsightFace (ArcFace embeddings).
+A production-ready **Biometric Authentication System** featuring a **NestJS API Gateway**, **Python ML Service**, and **PostgreSQL with pgvector**.
 
-## 🎯 Overview
+## 🏗️ System Architecture
 
-This service powers a facial recognition login system with two main flows:
+The system is split into three specialized components:
 
-1. **Enrollment**: User takes selfie → Generate 512D embedding → Save to database
-2. **Authentication**: User takes selfie → Generate embedding → Compare with saved embedding → Grant/Deny access
+1.  **API Gateway (NestJS)**: The "Manager". Handles user requests, authentication logic, and coordinates between the user, database, and ML service.
+2.  **ML Service (Python)**: The "Brain". A stateless container that purely converts face images into mathematical vectors (embeddings).
+3.  **Database (PostgreSQL + pgvector)**: The "Memory". Stores user profiles and the 512-dimensional face vectors for fast similarity search.
 
-## 🏗️ Architecture
+```mermaid
+graph LR
+    User[User] -->|Upload Photo| NestJS[NestJS Gateway]
+    NestJS -->|Image| ML[Python ML Service]
+    ML -->|Vector| NestJS
+    NestJS -->|Store/Compare| DB[(PostgreSQL + pgvector)]
+```
 
-- **Framework**: FastAPI (Python 3.10+)
-- **Face Detection**: MediaPipe
-- **Embedding Generation**: InsightFace (ArcFace model - 512 dimensions)
-- **Vector Math**: NumPy
-- **Deployment**: Docker
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Docker Desktop** installed and running.
+- **Node.js** (v18+) installed.
+
+### 1. Start Infrastructure (The Brain & Memory)
+
+Start the Python ML Service and PostgreSQL Database.
+
+```bash
+docker-compose up -d --build
+```
+
+### 2. Setup Backend (The Manager)
+
+Navigate to the `api-gateway` folder:
+
+```bash
+cd api-gateway
+npm install
+```
+
+### 3. Initialize Database
+
+Push the schema to the running database.
+
+```bash
+npx drizzle-kit push
+```
+
+### 4. Start the Server
+
+```bash
+npm run start:dev
+```
+
+The backend will run on `http://localhost:3000`.
+
+---
+
+## 🧪 Testing
+
+You can test the system using `curl` commands.
+
+### 1. Register (Enrollment)
+
+Uploads an image. The system vectorizes it and saves the user.
+
+**Windows PowerShell:**
+
+```powershell
+curl.exe -X POST http://localhost:3000/auth/register -F "email=test@example.com" -F "image=@../my_photo.jpg"
+```
+
+**Mac/Linux:**
+
+```bash
+curl -X POST http://localhost:3000/auth/register \
+  -F "email=test@example.com" \
+  -F "image=@../my_photo.jpg"
+```
+
+### 2. Login (Authentication)
+
+Uploads a new image. The system vectorizes it, compares it with the saved vector, and issues an Access Token if they match.
+
+**Windows PowerShell:**
+
+```powershell
+curl.exe -X POST http://localhost:3000/auth/login -F "email=test@example.com" -F "image=@../my_photo.jpg"
+```
+
+---
+
+## 🧠 Key Concepts & FAQ
+
+### Why are there two containers?
+
+- **`face-api` (Python)**: Specialized for heavy AI math. It runs the Neural Networks.
+- **`face-db` (Postgres)**: Specialized for storing data.
+  This separation allows you to scale them independently. If you have millions of users, you might need 10 AI containers but still just one database.
+
+### What is a "Vector"?
+
+A **Vector** is a list of 512 numbers that represents the unique features of a face.
+
+- We **never** compare images pixel-by-pixel (lighting changes would break it).
+- Instead, we convert the face to these numbers.
+- **Same Face** = Similar numbers (Vectors point in same direction).
+
+### What is the "Access Token"?
+
+The **Access Token** (JWT) is your "Guest Badge".
+
+- **It is NOT the vector.** The vector is heavy and private data stored in the DB.
+- The token is a lightweight encrypted string that says "This user verified their face at [Time]. Let them in."
+- You use this token for subsequent requests so you don't have to scan your face for every single click.
+
+### How do I change the token expiration?
+
+By default, the token lasts **1 hour**. To change this:
+
+1.  Open `api-gateway/src/auth/auth.module.ts`
+2.  Find `signOptions: { expiresIn: '1h' }`
+3.  Change it to `'1d'` (1 day), `'15m'` (15 mins), etc.
+
+---
 
 ## 📁 Project Structure
 
 ```
 facial-recognition-saas/
-├── app/
-│   ├── __init__.py
-│   ├── engine.py          # FaceEngine singleton class
-│   └── main.py            # FastAPI endpoints
-├── requirements.txt       # Python dependencies
-├── Dockerfile            # Production-ready container
-├── .dockerignore
-├── .gitignore
-└── README.md
+├── api-gateway/           # NestJS Backend
+│   ├── src/
+│   │   ├── auth/          # Auth Logic (Register, Login)
+│   │   ├── db/            # Database Schema & Connection
+│   │   └── app.module.ts  # Main Module
+│   ├── drizzle.config.ts  # Database Config
+│   └── package.json       # Node Dependencies
+├── app/                   # Python ML Service Code
+├── docker-compose.yml     # Container Orchestration
+└── Dockerfile             # Python Service Dockerfile
 ```
-
-## 🚀 Quick Start
-
-### Local Development
-
-1. **Create virtual environment**:
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-2. **Install dependencies**:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. **Run the service**:
-
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-4. **Access API docs**:
-
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-### Docker Deployment
-
-1. **Build the image**:
-
-```bash
-docker build -t facial-ml-service .
-```
-
-2. **Run the container**:
-
-```bash
-docker run -p 8000:8000 facial-ml-service
-```
-
-## 📡 API Endpoints
-
-### POST `/vectorize`
-
-Generate a 512-dimensional facial embedding from an image.
-
-**Usage**: Called during user registration/enrollment.
-
-**Request**:
-
-```bash
-curl -X POST "http://localhost:8000/vectorize" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@selfie.jpg"
-```
-
-**Response**:
-
-```json
-{
-  "vector": [0.12, -0.4, 0.23, ...]  // 512 floats
-}
-```
-
-**Error Cases**:
-
-- `400`: No face detected
-- `400`: Multiple faces detected (security risk)
-
----
-
-### POST `/verify_user`
-
-Verify if a live image matches a saved facial embedding.
-
-**Usage**: Called during user login/authentication.
-
-**Request**:
-
-```bash
-curl -X POST "http://localhost:8000/verify_user" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@login_selfie.jpg" \
-  -F 'saved_vector=[0.12, -0.4, ...]'
-```
-
-**Response**:
-
-```json
-{
-  "match": true,
-  "confidence": 0.87
-}
-```
-
-**Parameters**:
-
-- `file`: Live image from login attempt
-- `saved_vector`: JSON string of 512D vector from database
-
-**Threshold**: 0.6 (strict for security)
-
----
-
-### GET `/health`
-
-Health check endpoint.
-
-**Response**:
-
-```json
-{
-  "status": "healthy",
-  "engine_initialized": true
-}
-```
-
-## 🔒 Security Features
-
-1. **Single Face Validation**: Rejects images with 0 or multiple faces
-2. **Strict Threshold**: Uses 0.6 similarity threshold to prevent false positives
-3. **Normalized Vectors**: L2 normalization for consistent comparisons
-4. **Stateless Design**: No data persistence in ML service
-5. **Non-root Docker User**: Container runs as non-privileged user
-
-## 🔗 Integration Guide
-
-### Backend Integration (NestJS Example)
-
-#### Registration Endpoint
-
-```typescript
-async registerUser(image: File, userData: UserDto) {
-  // 1. Call ML service to vectorize
-  const formData = new FormData();
-  formData.append('file', image);
-
-  const response = await fetch('http://ml-service:8000/vectorize', {
-    method: 'POST',
-    body: formData
-  });
-
-  const { vector } = await response.json();
-
-  // 2. Save vector to database
-  await this.userRepository.save({
-    ...userData,
-    biometric_vector: vector  // Store as float[] or use pgvector
-  });
-}
-```
-
-#### Login Endpoint
-
-```typescript
-async loginUser(image: File, email: string) {
-  // 1. Retrieve saved vector from database
-  const user = await this.userRepository.findOne({ email });
-
-  // 2. Call ML service to verify
-  const formData = new FormData();
-  formData.append('file', image);
-  formData.append('saved_vector', JSON.stringify(user.biometric_vector));
-
-  const response = await fetch('http://ml-service:8000/verify_user', {
-    method: 'POST',
-    body: formData
-  });
-
-  const { match, confidence } = await response.json();
-
-  // 3. Generate JWT if match
-  if (match) {
-    return this.jwtService.sign({ userId: user.id });
-  } else {
-    throw new UnauthorizedException('Face verification failed');
-  }
-}
-```
-
-### Database Schema (PostgreSQL)
-
-```sql
--- Add to User table
-ALTER TABLE users ADD COLUMN biometric_vector FLOAT[512];
-
--- Optional: Use pgvector extension for efficient similarity search
-CREATE EXTENSION vector;
-ALTER TABLE users ADD COLUMN biometric_vector vector(512);
-```
-
-## 🧪 Testing
-
-### Test Vectorization
-
-```bash
-# Upload a test image
-curl -X POST "http://localhost:8000/vectorize" \
-  -F "file=@test_images/person1.jpg"
-```
-
-### Test Verification (Match)
-
-```bash
-# Same person
-curl -X POST "http://localhost:8000/verify_user" \
-  -F "file=@test_images/person1_photo2.jpg" \
-  -F 'saved_vector=[...]'  # Vector from person1.jpg
-```
-
-### Test Verification (No Match)
-
-```bash
-# Different person
-curl -X POST "http://localhost:8000/verify_user" \
-  -F "file=@test_images/person2.jpg" \
-  -F 'saved_vector=[...]'  # Vector from person1.jpg
-```
-
-## ⚙️ Configuration
-
-### Threshold Tuning
-
-Adjust the similarity threshold in `app/main.py`:
-
-```python
-is_match, confidence = face_engine.verify_match(
-    current_image_bytes=image_bytes,
-    saved_vector=saved_vector_list,
-    threshold=0.6  # Adjust this value
-)
-```
-
-**Recommendations**:
-
-- `0.5-0.6`: Strict (recommended for login/security)
-- `0.4-0.5`: Balanced
-- `0.3-0.4`: Lenient (higher false positive risk)
-
-### GPU Support
-
-To enable GPU acceleration, modify `app/engine.py`:
-
-```python
-self.face_analyzer = FaceAnalysis(
-    name='buffalo_l',
-    providers=['CUDAExecutionProvider', 'CPUExecutionProvider']  # GPU first
-)
-```
-
-And update Dockerfile to use CUDA base image.
-
-## 📊 Performance
-
-- **Vectorization**: ~200-500ms per image (CPU)
-- **Verification**: ~200-500ms per image (CPU)
-- **Model Size**: ~300MB (buffalo_l)
-- **Memory**: ~1-2GB RAM
-
-## 🐛 Troubleshooting
-
-### "No face detected"
-
-- Ensure good lighting
-- Face should be clearly visible
-- Try different angles
-
-### "Multiple faces detected"
-
-- Ensure only one person in frame
-- Remove background people/photos
-
-### Slow performance
-
-- Consider GPU acceleration
-- Use smaller model (buffalo_s)
-- Implement caching for repeated requests
-
-## 📝 License
-
-MIT
-
-## 🤝 Contributing
-
-Contributions welcome! Please open an issue or PR.
-
-## 📧 Support
-
-For issues or questions, please open a GitHub issue.

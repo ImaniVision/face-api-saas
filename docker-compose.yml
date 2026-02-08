@@ -16,12 +16,36 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s      # Give the service time to download models on first run
-    # Optional: Uncomment to limit resources
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '2'
-    #       memory: 4G
-    #     reservations:
-    #       cpus: '1'
-    #       memory: 2G
+
+  # Database with pgvector support
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: face-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: biometric_auth
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # NestJS Backend (The Manager)
+  backend:
+    build: ./api-gateway     # Build from the api-gateway directory
+    container_name: face-gateway
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - ml-service
+    environment:
+      # Use internal container names (face-db, face-api)
+      DATABASE_URL: postgresql://user:password@face-db:5432/biometric_auth
+      ML_SERVICE_URL: http://face-api:8000
+      JWT_SECRET: super-secret-key-change-this-in-prod
+
+volumes:
+  postgres_data:
