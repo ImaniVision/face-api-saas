@@ -4,6 +4,21 @@ import { Button } from "@/components/ui/button";
 import { FAQ } from "@/components/marketing/faq";
 import { ParticlesBg } from "@/components/marketing/particles-bg";
 
+const VERIFY_SNIPPET = `// 1:1 check: is this selfie the customer you enrolled?
+const form = new FormData();
+form.append("image", selfie);
+
+const res = await fetch(
+  \`\${process.env.IMANI_API_URL}/v1/subjects/customer_123/verify\`,
+  {
+    method: "POST",
+    headers: { "x-api-key": process.env.IMANI_API_KEY },
+    body: form,
+  },
+);
+
+const { match, confidence } = await res.json();`;
+
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -129,49 +144,13 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center justify-center flex-1">
                   <span className="text-xs text-zinc-400 font-mono">
-                    verify.ts
+                    verify.js
                   </span>
                 </div>
               </div>
-              <div className="p-6 text-sm font-mono text-zinc-300 overflow-x-auto">
-                <pre>
-                  <code>
-                    <span className="text-zinc-500">
-                      // Initialize the FaceAuth client
-                    </span>
-                    <span className="text-purple-400">import</span> {"{"}{" "}
-                    FaceAuth {"}"} <span className="text-purple-400">from</span>{" "}
-                    <span className="text-emerald-400">'@faceauth/node'</span>;
-                    <span className="text-purple-400">const</span> client ={" "}
-                    <span className="text-purple-400">new</span>{" "}
-                    FaceAuth(process.env.FACEAUTH_KEY);
-                    <span className="text-zinc-500">
-                      // Verify a user's identity
-                    </span>
-                    <span className="text-purple-400">const</span> verification
-                    = <span className="text-purple-400">await</span>{" "}
-                    client.verify({"{"}
-                    <span className="text-sky-300">userId:</span>{" "}
-                    <span className="text-emerald-400">'user_123'</span>,
-                    <span className="text-sky-300">imageBuffer:</span>{" "}
-                    req.file.buffer,
-                    <span className="text-sky-300">requireLiveness:</span>{" "}
-                    <span className="text-orange-300">true</span>
-                    {"}"});
-                    <span className="text-purple-400">if</span>{" "}
-                    (verification.success) {"{"}
-                    console.log(
-                    <span className="text-emerald-400">
-                      'Identity verified successfully!'
-                    </span>
-                    );
-                    <span className="text-purple-400">return</span> res.json(
-                    {"{"} <span className="text-sky-300">token:</span>{" "}
-                    verification.token {"}"});
-                    {"}"}
-                  </code>
-                </pre>
-              </div>
+              <pre className="p-6 text-sm font-mono text-zinc-300 overflow-x-auto">
+                <code>{VERIFY_SNIPPET}</code>
+              </pre>
             </div>
           </div>
         </div>
@@ -186,7 +165,7 @@ export default function HomePage() {
           </h2>
           <p className="max-w-2xl mx-auto mb-8 sm:mb-10 text-base sm:text-lg md:text-xl text-muted-foreground px-4">
             Our API is designed for developers who want to ship fast and iterate
-            quickly. Everything is controlled via simple, typed SDKs.
+            quickly. Enroll, verify and delete with three plain HTTP calls.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto px-4 sm:px-0">
             <Link href="/sign-up" className="w-full sm:w-auto">

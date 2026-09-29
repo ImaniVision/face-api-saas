@@ -71,7 +71,8 @@ export default function ApiKeysPage() {
         setNewKeyName("");
         fetchKeys();
       } else {
-        toast.error("Failed to create key");
+        const body = await res.json().catch(() => null);
+        toast.error(body?.message ?? "Failed to create key");
       }
     } catch (e) {
       toast.error("An error occurred");
@@ -177,7 +178,7 @@ export default function ApiKeysPage() {
                   colSpan={5}
                   className="p-8 text-center text-muted-foreground"
                 >
-                  No API keys found. Click "Create new secret key" to generate
+                  No API keys found. Click &quot;Create new secret key&quot; to generate
                   one.
                 </td>
               </tr>
@@ -257,8 +258,8 @@ export default function ApiKeysPage() {
             <h2 className="text-xl font-bold mb-2">Save your secret key</h2>
             <p className="text-sm text-muted-foreground mb-4">
               Please save this secret key somewhere safe. For security reasons,{" "}
-              <strong>you won't be able to view it again</strong> through your
-              account. If you lose this key, you'll need to generate a new one.
+              <strong>you won&apos;t be able to view it again</strong> through your
+              account. If you lose this key, you&apos;ll need to generate a new one.
             </p>
             <div className="p-3 bg-muted rounded-md border border-border flex items-center gap-3">
               <code className="text-sm break-all flex-1 text-foreground">

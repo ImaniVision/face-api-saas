@@ -16,30 +16,35 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { BarChart3 } from "lucide-react";
 
-// Sample usage data
-const usageData = [
-  { day: "Feb 1", calls: 120 },
-  { day: "Feb 3", calls: 235 },
-  { day: "Feb 5", calls: 189 },
-  { day: "Feb 7", calls: 310 },
-  { day: "Feb 9", calls: 275 },
-  { day: "Feb 11", calls: 420 },
-  { day: "Feb 13", calls: 380 },
-  { day: "Feb 15", calls: 510 },
-  { day: "Feb 17", calls: 468 },
-  { day: "Feb 19", calls: 590 },
-  { day: "Feb 21", calls: 620 },
-  { day: "Feb 23", calls: 710 },
-  { day: "Feb 25", calls: 680 },
-  { day: "Feb 27", calls: 755 },
-  { day: "Feb 28", calls: 820 },
-];
+export interface DailyUsage {
+  day: string; // YYYY-MM-DD
+  calls: number;
+}
 
-export function UsageChart() {
-  const totalCalls = usageData.reduce((sum, d) => sum + d.calls, 0);
+interface UsageChartProps {
+  byDay: DailyUsage[];
+  windowDays: number;
+  totalCalls: number;
+}
+
+// Days with no calls are absent from the API; show them as zero.
+function fillDays(byDay: DailyUsage[], windowDays: number) {
+  const calls = new Map(byDay.map((d) => [d.day, d.calls]));
+  return Array.from({ length: windowDays }, (_, i) => {
+    const date = new Date();
+    date.setUTCDate(date.getUTCDate() - (windowDays - 1 - i));
+    const key = date.toISOString().slice(0, 10);
+    return {
+      day: date.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      calls: calls.get(key) ?? 0,
+    };
+  });
+}
+
+export function UsageChart({ byDay, windowDays, totalCalls }: UsageChartProps) {
+  const data = fillDays(byDay, windowDays);
 
   return (
     <Card className="border-border/40 bg-card/80 backdrop-blur-sm">
@@ -48,22 +53,14 @@ export function UsageChart() {
           <div>
             <CardTitle className="flex items-center gap-2 text-lg">
               <BarChart3 className="h-5 w-5 text-indigo-400" />
-              API Calls This Month
+              API Calls, Last {windowDays} Days
             </CardTitle>
             <CardDescription className="mt-1">
-              Your verification request volume over time
+              Every metered /v1 request, including failed ones
             </CardDescription>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-foreground">
-              {totalCalls.toLocaleString()}
-            </div>
-            <Badge
-              variant="outline"
-              className="border-green-500/30 bg-green-500/10 text-green-400"
-            >
-              +23% vs last month
-            </Badge>
+          <div className="text-2xl font-bold text-foreground">
+            {totalCalls.toLocaleString()}
           </div>
         </div>
       </CardHeader>
@@ -71,7 +68,7 @@ export function UsageChart() {
         <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={usageData}
+              data={data}
               margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
             >
               <defs>
@@ -99,12 +96,14 @@ export function UsageChart() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                minTickGap={24}
               />
               <YAxis
                 stroke="hsl(0, 0%, 45%)"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                allowDecimals={false}
               />
               <Tooltip
                 contentStyle={{

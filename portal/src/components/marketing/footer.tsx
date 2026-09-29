@@ -71,7 +71,6 @@ export function Footer() {
               applications.
             </p>
           </div>
-          // ... existing code ...
           {/* Product */}
           <div>
             <h4 className="text-base font-semibold text-foreground mb-6">

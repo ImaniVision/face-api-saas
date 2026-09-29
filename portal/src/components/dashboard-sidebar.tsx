@@ -7,13 +7,11 @@ import {
   Aperture,
   Key,
   BarChart3,
-  CreditCard,
   PanelLeftClose,
   PanelLeft,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -53,7 +51,7 @@ export function DashboardSidebar({
 
   const isActive = (href: string) => pathname === href;
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex h-14 items-center justify-between px-4 border-b border-border/40">
@@ -157,31 +155,6 @@ export function DashboardSidebar({
           </div>
         </div>
       </nav>
-
-      {/* Bottom Card - Credits */}
-      {!collapsed && (
-        <div className="mx-3 mb-4 rounded-xl border border-border/40 bg-card/60 p-4">
-          <div className="flex items-start justify-between">
-            <p className="text-sm font-semibold text-foreground">Add credits</p>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-            Run your next API request by adding credits.
-          </p>
-          <Link href="/pricing">
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-3 w-full gap-2 text-xs border-border/60"
-            >
-              <CreditCard className="h-3.5 w-3.5" />
-              Go to Billing
-            </Button>
-          </Link>
-        </div>
-      )}
     </div>
   );
 
@@ -202,7 +175,7 @@ export function DashboardSidebar({
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
 
       {/* Desktop Sidebar */}
@@ -212,7 +185,7 @@ export function DashboardSidebar({
           collapsed ? "w-[60px]" : "w-[240px]",
         )}
       >
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
     </>
   );
