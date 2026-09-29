@@ -1,6 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { ApiKeysService } from './api-keys.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import type { AuthedRequest } from '../auth/types';
 
 @Controller('api-keys')
 @UseGuards(JwtAuthGuard)
@@ -8,26 +19,26 @@ export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}
 
   @Post()
-  create(@Request() req: any, @Body('name') name: string) {
-    const userId = req.user.sub;
-    return this.apiKeysService.createKey(userId, name || 'Default Key');
+  create(@Req() req: AuthedRequest, @Body('name') name: string) {
+    return this.apiKeysService.createKey(req.user.sub, name || 'Default Key');
   }
 
   @Get()
-  findAll(@Request() req: any) {
-    const userId = req.user.sub;
-    return this.apiKeysService.listKeys(userId);
+  findAll(@Req() req: AuthedRequest) {
+    return this.apiKeysService.listKeys(req.user.sub);
   }
 
   @Patch(':id')
-  update(@Request() req: any, @Param('id') id: string, @Body('name') name: string) {
-    const userId = req.user.sub;
-    return this.apiKeysService.renameKey(userId, id, name);
+  update(
+    @Req() req: AuthedRequest,
+    @Param('id') id: string,
+    @Body('name') name: string,
+  ) {
+    return this.apiKeysService.renameKey(req.user.sub, id, name);
   }
 
   @Delete(':id')
-  remove(@Request() req: any, @Param('id') id: string) {
-    const userId = req.user.sub;
-    return this.apiKeysService.revokeKey(userId, id);
+  remove(@Req() req: AuthedRequest, @Param('id') id: string) {
+    return this.apiKeysService.revokeKey(req.user.sub, id);
   }
 }

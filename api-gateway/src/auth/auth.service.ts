@@ -2,169 +2,167 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  ConflictException,
+  NotFoundException,
+  ServiceUnavailableException,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
-import { DRIZZLE } from '../db/db.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import * as schema from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, gt } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
-import FormData from 'form-data';
+import * as crypto from 'crypto';
+import { DRIZZLE } from '../db/db.module';
+import * as schema from '../db/schema';
+import { MlService } from '../ml/ml.service';
+import { SubjectsService } from '../subjects/subjects.service';
+import { MailService } from './mail.service';
+
+const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
+// Face-login demo accounts enroll themselves as their own subject under this id.
+const SELF_SUBJECT = 'self';
+
+const sha256 = (value: string) =>
+  crypto.createHash('sha256').update(value).digest('hex');
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>,
     private jwtService: JwtService,
-    private httpService: HttpService,
-    private configService: ConfigService,
+    private ml: MlService,
+    private subjects: SubjectsService,
+    private mail: MailService,
   ) {}
 
-  private get mlServiceUrl() {
-    return (
-      this.configService.get<string>('ML_SERVICE_URL') ||
-      'http://localhost:8000'
-    );
-  }
-
   async emailRegister(email: string, password: string) {
-    const existingUser = await this.db.query.users.findFirst({
-      where: eq(schema.users.email, email),
-    });
+    await this.assertEmailFree(email);
 
-    if (existingUser) {
-      throw new BadRequestException('User already exists');
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const [newUser] = await this.db
+    const token = crypto.randomBytes(32).toString('base64url');
+    const [user] = await this.db
       .insert(schema.users)
       .values({
         email,
-        password: hashedPassword,
+        password: await bcrypt.hash(password, 10),
+        emailVerificationTokenHash: sha256(token),
+        emailVerificationExpiresAt: new Date(Date.now() + VERIFICATION_TTL_MS),
       })
-      .returning();
+      .returning({ id: schema.users.id });
 
-    return this.generateToken(newUser.id, newUser.email);
+    try {
+      await this.mail.sendVerification(email, token);
+    } catch (err) {
+      // Don't leave an account nobody can verify.
+      await this.db.delete(schema.users).where(eq(schema.users.id, user.id));
+      this.logger.error(`Verification email failed: ${String(err)}`);
+      throw new ServiceUnavailableException(
+        'Could not send the verification email. Please try again.',
+      );
+    }
+
+    return { message: 'Check your email to verify your account.' };
+  }
+
+  async verifyEmail(token: string) {
+    const [user] = await this.db
+      .update(schema.users)
+      .set({
+        emailVerifiedAt: new Date(),
+        emailVerificationTokenHash: null,
+        emailVerificationExpiresAt: null,
+      })
+      .where(
+        and(
+          eq(schema.users.emailVerificationTokenHash, sha256(token)),
+          gt(schema.users.emailVerificationExpiresAt, new Date()),
+        ),
+      )
+      .returning({ id: schema.users.id });
+
+    if (!user) {
+      throw new BadRequestException(
+        'Verification link is invalid or has expired.',
+      );
+    }
+    return { verified: true };
   }
 
   async emailLogin(email: string, password: string) {
-    const user = await this.db.query.users.findFirst({
-      where: eq(schema.users.email, email),
-    });
+    const user = await this.findByEmail(email);
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const passwordValid = await bcrypt.compare(password, user.password);
-    if (!passwordValid) {
+    if (!user?.password || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     return {
       ...this.generateToken(user.id, user.email),
-      user: { id: user.id, email: user.email },
+      user: {
+        id: user.id,
+        email: user.email,
+        emailVerified: user.emailVerifiedAt !== null,
+      },
     };
   }
 
-  async register(email: string, imageBuffer: Buffer) {
-    // Check if user exists
-    const existingUser = await this.db.query.users.findFirst({
-      where: eq(schema.users.email, email),
-    });
+  /** Face-login demo: a password-less account enrolled as its own subject. */
+  async register(email: string, image: Buffer) {
+    await this.assertEmailFree(email);
+    const embedding = await this.ml.vectorize(image);
 
-    if (existingUser) {
-      throw new BadRequestException('User already exists');
-    }
-
-    // Call ML Service to vectorize
-    const vector = await this.getVectorFromMLService(imageBuffer);
-
-    // Create user and save vector in transaction
-    const newUser = await this.db.transaction(async (tx) => {
-      const [user] = await tx
+    const user = await this.db.transaction(async (tx) => {
+      const [created] = await tx
         .insert(schema.users)
-        .values({
-          email,
-          password: await bcrypt.hash('placeholder-password', 10), // In a real app, you'd handle password properly
-        })
+        .values({ email })
         .returning();
-
-      await tx.insert(schema.biometrics).values({
-        userId: user.id,
-        embedding: vector,
+      await this.subjects.store(tx, created.id, SELF_SUBJECT, embedding, {
+        method: 'self-enrollment',
       });
-
-      return user;
+      return created;
     });
 
-    return this.generateToken(newUser.id, newUser.email);
+    return this.generateToken(user.id, user.email);
   }
 
-  async login(email: string, imageBuffer: Buffer) {
-    // Get user from DB
-    const user = await this.db.query.users.findFirst({
-      where: eq(schema.users.email, email),
-    });
-
+  /** 1:1: identity is claimed by email first, then the face is checked against that one template. */
+  async login(email: string, image: Buffer) {
+    const user = await this.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Get stored vector
-    const biometric = await this.db.query.biometrics.findFirst({
-      where: eq(schema.biometrics.userId, user.id),
-    });
+    const result = await this.subjects
+      .verify(user.id, SELF_SUBJECT, image)
+      .catch((err: unknown) => {
+        if (err instanceof NotFoundException) {
+          throw new UnauthorizedException('Invalid credentials');
+        }
+        throw err;
+      });
 
-    if (!biometric) {
-      throw new UnauthorizedException('No biometric data found');
-    }
-
-    // Get vector for new image
-    const newVector = await this.getVectorFromMLService(imageBuffer);
-
-    // Compare vectors
-    const similarity = this.cosineSimilarity(biometric.embedding, newVector);
-
-    if (similarity > 0.6) {
-      return this.generateToken(user.id, user.email);
-    } else {
+    if (!result.match) {
       throw new UnauthorizedException('Biometric verification failed');
     }
+    return this.generateToken(user.id, user.email);
   }
 
-  private async getVectorFromMLService(imageBuffer: Buffer): Promise<number[]> {
-    const formData = new FormData();
-    formData.append('file', imageBuffer, { filename: 'image.jpg' });
-    const mlServiceKey =
-      this.configService.getOrThrow<string>('ML_SERVICE_API_KEY');
+  /** Right to be forgotten for the developer: cascades to keys, subjects, templates, consents and usage. */
+  async deleteAccount(userId: string): Promise<void> {
+    await this.db.delete(schema.users).where(eq(schema.users.id, userId));
+  }
 
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(`${this.mlServiceUrl}/vectorize`, formData, {
-          headers: {
-            ...formData.getHeaders(),
-            'X-ML-Service-Key': mlServiceKey,
-          },
-        }),
-      );
-      return response.data.vector;
-    } catch (error) {
-      throw new BadRequestException('Failed to process image with ML service');
+  private findByEmail(email: string) {
+    return this.db.query.users.findFirst({
+      where: eq(schema.users.email, email),
+    });
+  }
+
+  private async assertEmailFree(email: string) {
+    if (await this.findByEmail(email)) {
+      throw new ConflictException('User already exists');
     }
-  }
-
-  private cosineSimilarity(vecA: number[], vecB: number[]): number {
-    const dotProduct = vecA.reduce((acc, val, i) => acc + val * vecB[i], 0);
-    const magA = Math.sqrt(vecA.reduce((acc, val) => acc + val * val, 0));
-    const magB = Math.sqrt(vecB.reduce((acc, val) => acc + val * val, 0));
-    return dotProduct / (magA * magB);
   }
 
   private generateToken(userId: string, email: string) {
