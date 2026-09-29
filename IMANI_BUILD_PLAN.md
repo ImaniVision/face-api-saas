@@ -19,10 +19,10 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
 > **Order matters here:** strip secrets → THEN commit. If you commit first and remove secrets
 > later, the secret is in git history forever (and must be rotated).
 
-- [ ] Create `.env` from `.env.example`; move ALL secrets out of `docker-compose.yml` and any source into env vars.
-- [ ] Add `.env` (and `*.env`) to `.gitignore`. Commit `.env.example` with **placeholder** values only.
-- [ ] If `JWT_SECRET`, DB creds, or any key was **ever committed before**, rotate them now.
-- [ ] Initialize/normalize git, commit current work, push to shared remote (GitHub). Protect `main`; enable PR-based workflow.
+- [x] Create `.env` from `.env.example`; move ALL secrets out of `docker-compose.yml` and any source into env vars.
+- [x] Add `.env` (and `*.env`) to `.gitignore`. Commit `.env.example` with **placeholder** values only.
+- [x] If `JWT_SECRET`, DB creds, or any key was **ever committed before**, rotate them now.
+- [x] Initialize/normalize git, commit current work, push to shared remote (GitHub). Protect `main`; enable PR-based workflow.
 - [x] Close network exposure in `docker-compose.yml`: remove the `8000:8000` (ML service) and `5432:5432` (Postgres) host port mappings so they're only reachable inside the Docker network.
 - [x] Lock CORS on the gateway to the portal's origin (no wildcard). Add `helmet`.
 - [x] Fix the broken demo: the Live Test page posts to `/api/proxy/verify`, which doesn't exist (`portal/src/components/demo-widget.tsx:68`). Add the proxy route or point it at the real endpoint.
