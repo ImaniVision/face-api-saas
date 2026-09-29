@@ -10,6 +10,8 @@ from insightface.app import FaceAnalysis
 from typing import Optional, Tuple, List
 import logging
 
+from app.matching import MATCH_THRESHOLD, decide
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -139,55 +141,20 @@ class FaceEngine:
         return embedding.tolist()
     
     def verify_match(
-        self, 
-        current_image_bytes: bytes, 
+        self,
+        current_image_bytes: bytes,
         saved_vector: List[float],
-        threshold: float = 0.6
     ) -> Tuple[bool, float]:
         """
-        Verify if a live image matches a saved facial embedding.
-        
-        This method:
-        1. Generates embedding from the current image
-        2. Calculates cosine similarity with the saved vector
-        3. Compares against threshold for authentication decision
-        
-        Args:
-            current_image_bytes: Raw bytes of the current/live image
-            saved_vector: Previously saved 512D embedding (from database)
-            threshold: Similarity threshold for match (default: 0.6 for strict security)
-            
-        Returns:
-            Tuple of (is_match: bool, confidence: float)
-            - is_match: True if similarity >= threshold
-            - confidence: Cosine similarity score (0.0 to 1.0)
-            
+        Verify a live image against a saved embedding. The decision (and τ) lives in
+        app.matching — this only produces the live embedding.
+
         Raises:
             ValueError: If face detection/embedding fails
         """
-        # Generate embedding from current image
         current_vector = self.image_to_vector(current_image_bytes)
-        
-        # Convert to numpy arrays
-        current_vec = np.array(current_vector)
-        saved_vec = np.array(saved_vector)
-        
-        # Ensure vectors are normalized
-        current_vec = current_vec / np.linalg.norm(current_vec)
-        saved_vec = saved_vec / np.linalg.norm(saved_vec)
-        
-        # Calculate cosine similarity
-        # For normalized vectors: cosine_similarity = dot_product
-        similarity = float(np.dot(current_vec, saved_vec))
-        
-        # Clamp to [0, 1] range (should already be, but just in case)
-        similarity = max(0.0, min(1.0, similarity))
-        
-        # Determine match based on threshold
-        is_match = similarity >= threshold
-        
-        logger.info(f"Verification result: similarity={similarity:.4f}, threshold={threshold}, match={is_match}")
-        
+        is_match, similarity = decide(saved_vector, current_vector)
+        logger.info(f"Verification result: similarity={similarity:.4f}, threshold={MATCH_THRESHOLD}, match={is_match}")
         return is_match, similarity
 
 

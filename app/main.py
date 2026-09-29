@@ -165,7 +165,7 @@ async def verify_user(
     4. Backend generates JWT if match=true, returns 401 if match=false
     
     **Security**:
-    - Uses strict threshold (0.6) to prevent false positives
+    - Match threshold τ is app.matching.MATCH_THRESHOLD (the only one in the system)
     - Returns 400 if no face or multiple faces detected
     
     Args:
@@ -205,7 +205,6 @@ async def verify_user(
         is_match, confidence = face_engine.verify_match(
             current_image_bytes=image_bytes,
             saved_vector=saved_vector_list,
-            threshold=0.6  # Strict threshold for security
         )
         
         logger.info(f"Verification complete: match={is_match}, confidence={confidence:.4f}")
