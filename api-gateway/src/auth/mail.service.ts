@@ -10,9 +10,14 @@ export class MailService {
 
   constructor(config: ConfigService) {
     const user = config.get<string>('SMTP_USER');
+    // nodemailer silently falls back to port 587 on an empty/invalid port.
+    const port = Number(config.getOrThrow<string>('SMTP_PORT'));
+    if (!Number.isInteger(port) || port <= 0) {
+      throw new Error('SMTP_PORT must be a port number, e.g. 1025');
+    }
     this.transporter = nodemailer.createTransport({
       host: config.getOrThrow<string>('SMTP_HOST'),
-      port: Number(config.getOrThrow<string>('SMTP_PORT')),
+      port,
       auth: user
         ? { user, pass: config.getOrThrow<string>('SMTP_PASS') }
         : undefined,

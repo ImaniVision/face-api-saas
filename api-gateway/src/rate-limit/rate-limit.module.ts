@@ -1,4 +1,10 @@
-import { Global, Module, OnApplicationShutdown, Inject } from '@nestjs/common';
+import {
+  Global,
+  Inject,
+  Logger,
+  Module,
+  OnApplicationShutdown,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { REDIS, RateLimitGuard } from './rate-limit.guard';
@@ -9,12 +15,18 @@ import { REDIS, RateLimitGuard } from './rate-limit.guard';
     {
       provide: REDIS,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
-        new Redis(config.getOrThrow<string>('REDIS_URL'), {
+      useFactory: (config: ConfigService) => {
+        const redis = new Redis(config.getOrThrow<string>('REDIS_URL'), {
           // Fail fast instead of queueing requests while Redis is down.
           maxRetriesPerRequest: 1,
           enableOfflineQueue: false,
-        }),
+        });
+        const logger = new Logger('Redis');
+        redis.on('error', (err: Error) =>
+          logger.warn(`Connection error: ${err.message}`),
+        );
+        return redis;
+      },
     },
     RateLimitGuard,
   ],
