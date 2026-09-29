@@ -1,0 +1,10 @@
+{
+  "name": "imani-vision",
+  "private": true,
+  "scripts": {
+    "dev:infra": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build",
+    "dev:infra:down": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
+    "stack": "docker compose up -d --build",
+    "stack:down": "docker compose down"
+  }
+}

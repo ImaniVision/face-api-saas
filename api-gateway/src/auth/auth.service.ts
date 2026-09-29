@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, BadRequestException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  Inject,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
@@ -20,7 +25,52 @@ export class AuthService {
   ) {}
 
   private get mlServiceUrl() {
-    return this.configService.get<string>('ML_SERVICE_URL') || 'http://localhost:8000';
+    return (
+      this.configService.get<string>('ML_SERVICE_URL') ||
+      'http://localhost:8000'
+    );
+  }
+
+  async emailRegister(email: string, password: string) {
+    const existingUser = await this.db.query.users.findFirst({
+      where: eq(schema.users.email, email),
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('User already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const [newUser] = await this.db
+      .insert(schema.users)
+      .values({
+        email,
+        password: hashedPassword,
+      })
+      .returning();
+
+    return this.generateToken(newUser.id, newUser.email);
+  }
+
+  async emailLogin(email: string, password: string) {
+    const user = await this.db.query.users.findFirst({
+      where: eq(schema.users.email, email),
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordValid = await bcrypt.compare(password, user.password);
+    if (!passwordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return {
+      ...this.generateToken(user.id, user.email),
+      user: { id: user.id, email: user.email },
+    };
   }
 
   async register(email: string, imageBuffer: Buffer) {
@@ -38,10 +88,13 @@ export class AuthService {
 
     // Create user and save vector in transaction
     const newUser = await this.db.transaction(async (tx) => {
-      const [user] = await tx.insert(schema.users).values({
-        email,
-        password: await bcrypt.hash('placeholder-password', 10), // In a real app, you'd handle password properly
-      }).returning();
+      const [user] = await tx
+        .insert(schema.users)
+        .values({
+          email,
+          password: await bcrypt.hash('placeholder-password', 10), // In a real app, you'd handle password properly
+        })
+        .returning();
 
       await tx.insert(schema.biometrics).values({
         userId: user.id,
@@ -89,11 +142,16 @@ export class AuthService {
   private async getVectorFromMLService(imageBuffer: Buffer): Promise<number[]> {
     const formData = new FormData();
     formData.append('file', imageBuffer, { filename: 'image.jpg' });
+    const mlServiceKey =
+      this.configService.getOrThrow<string>('ML_SERVICE_API_KEY');
 
     try {
       const response = await firstValueFrom(
         this.httpService.post(`${this.mlServiceUrl}/vectorize`, formData, {
-          headers: formData.getHeaders(),
+          headers: {
+            ...formData.getHeaders(),
+            'X-ML-Service-Key': mlServiceKey,
+          },
         }),
       );
       return response.data.vector;

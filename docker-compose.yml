@@ -1,51 +1,58 @@
-version: '3.8'
+# All secrets come from a git-ignored `.env` next to this file (template: `.env.example`).
+# `${VAR:?...}` makes Compose refuse to start if a required value is missing.
+#
+# `ml` and `db` publish NO host ports: only the gateway reaches them, over the internal
+# Compose network. For local debugging, add a git-ignored docker-compose.override.yml that
+# binds to localhost only (e.g. "127.0.0.1:5432:5432") — never a bare "5432:5432".
 
 services:
-  # The ML Service (The Brain)
-  ml-service:
-    build: .                 # Build from the Dockerfile in the current directory
-    container_name: face-api # Name the container so it's easy to find
-    ports:
-      - "8000:8000"          # Map port 8000 to the outside world
-    restart: unless-stopped  # Auto-restart if it crashes (but not if manually stopped)
+  # The ML Service (The Brain) — private, gateway-only
+  ml:
+    build: .
+    container_name: face-api
+    expose:
+      - "8000"
+    restart: unless-stopped
     environment:
-      - PYTHONUNBUFFERED=1   # See Python logs in real-time
+      PYTHONUNBUFFERED: "1"
+      ML_SERVICE_API_KEY: ${ML_SERVICE_API_KEY:?set ML_SERVICE_API_KEY in .env}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s      # Give the service time to download models on first run
 
-  # Database with pgvector support
-  postgres:
+  # Database with pgvector support — private, gateway-only
+  db:
     image: pgvector/pgvector:pg16
     container_name: face-db
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: biometric_auth
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  # NestJS Backend (The Manager)
+  # NestJS Backend (The Manager) — the only public entry point
   backend:
-    build: ./api-gateway     # Build from the api-gateway directory
+    build: ./api-gateway
     container_name: face-gateway
     ports:
       - "3000:3000"
     restart: unless-stopped
     depends_on:
-      - postgres
-      - ml-service
+      - db
+      - ml
     environment:
-      # Use internal container names (face-db, face-api)
-      DATABASE_URL: postgresql://user:password@face-db:5432/biometric_auth
-      ML_SERVICE_URL: http://face-api:8000
-      JWT_SECRET: super-secret-key-change-this-in-prod
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in .env}
+      ML_SERVICE_URL: ${ML_SERVICE_URL:?set ML_SERVICE_URL in .env}
+      ML_SERVICE_API_KEY: ${ML_SERVICE_API_KEY:?set ML_SERVICE_API_KEY in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PORTAL_ORIGIN: ${PORTAL_ORIGIN:?set PORTAL_ORIGIN in .env}
 
 volumes:
   postgres_data:

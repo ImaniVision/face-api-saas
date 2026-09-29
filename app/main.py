@@ -3,18 +3,34 @@ FastAPI ML Service for Facial Biometric Authentication.
 Provides endpoints for face vectorization and verification.
 """
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form
+from fastapi import Depends, FastAPI, File, Header, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
+import hmac
 import logging
 import json
+import os
 
 from app.engine import face_engine
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Shared secret the gateway sends on every call. Fail closed: refuse to start without it,
+# so the service can never run unauthenticated by accident.
+ML_SERVICE_API_KEY = os.environ.get("ML_SERVICE_API_KEY", "")
+if not ML_SERVICE_API_KEY:
+    raise RuntimeError("ML_SERVICE_API_KEY is not set; the ML service will not start without gateway auth")
+
+
+async def require_gateway_key(x_ml_service_key: Optional[str] = Header(default=None)) -> None:
+    """Reject any caller that isn't the gateway."""
+    if x_ml_service_key is None or not hmac.compare_digest(
+        x_ml_service_key.encode(), ML_SERVICE_API_KEY.encode()
+    ):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -84,7 +100,7 @@ async def health_check():
     }
 
 
-@app.post("/vectorize", response_model=VectorizeResponse)
+@app.post("/vectorize", response_model=VectorizeResponse, dependencies=[Depends(require_gateway_key)])
 async def vectorize(file: UploadFile = File(...)):
     """
     Generate a 512-dimensional facial embedding from an uploaded image.
@@ -132,7 +148,7 @@ async def vectorize(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail="Internal server error during vectorization")
 
 
-@app.post("/verify_user", response_model=VerifyResponse)
+@app.post("/verify_user", response_model=VerifyResponse, dependencies=[Depends(require_gateway_key)])
 async def verify_user(
     file: UploadFile = File(...),
     saved_vector: str = Form(...)

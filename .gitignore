@@ -1,21 +1,21 @@
-# Python
+# Python (packaging dirs anchored to repo root so they don't swallow e.g. portal/src/lib/)
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+/build/
+/develop-eggs/
+/dist/
+/downloads/
+/eggs/
+/.eggs/
+/lib/
+/lib64/
+/parts/
+/sdist/
+/var/
+/wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -25,6 +25,12 @@ venv/
 ENV/
 env/
 .venv
+benv/
+
+# Node (gateway + portal)
+node_modules/
+dist/
+.next/
 
 # IDE
 .vscode/
@@ -33,9 +39,11 @@ env/
 *.swo
 *~
 
-# Environment variables
+# Secrets: never commit real env files
 .env
-.env.local
+.env.*
+*.env
+!.env.example
 
 # Logs
 *.log
@@ -44,8 +52,11 @@ env/
 .DS_Store
 Thumbs.db
 
-# InsightFace models (downloaded at runtime)
+# Model weights / large artifacts (downloaded at runtime, never committed)
 ~/.insightface/
+*.onnx
+*.pt
+*.pth
 
 # Testing
 .pytest_cache/
@@ -57,5 +68,8 @@ test_*.py
 *.jpeg
 
 # Docker
-.dockerignore
 docker-compose.override.yml
+
+#Claude AI
+.claude
+CLAUDE.md
