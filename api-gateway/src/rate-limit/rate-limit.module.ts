@@ -22,9 +22,14 @@ import { REDIS, RateLimitGuard } from './rate-limit.guard';
           enableOfflineQueue: false,
         });
         const logger = new Logger('Redis');
-        redis.on('error', (err: Error) =>
-          logger.warn(`Connection error: ${err.message}`),
-        );
+        // Connection failures across IPv4/IPv6 arrive as an AggregateError with an empty message.
+        redis.on('error', (err: Error) => {
+          const causes =
+            err instanceof AggregateError
+              ? (err.errors as Error[]).map((e) => e.message)
+              : [err.message];
+          logger.warn(`Connection error: ${causes.join('; ')}`);
+        });
         return redis;
       },
     },
