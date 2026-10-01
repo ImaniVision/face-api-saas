@@ -71,7 +71,11 @@ cp .env.example .env
 | `JWT_SECRET` | Signs login tokens | Random value |
 | `ML_SERVICE_API_KEY` | Secret handshake: only the gateway may call the ML service | Random value |
 | `ML_SERVICE_URL` | ML service address **inside Docker** | `http://ml:8000` |
-| `PORTAL_ORIGIN` | The only website allowed to call the gateway from a browser | `http://localhost:3001` |
+| `PORTAL_ORIGIN` | The only website allowed to call the gateway from a browser; also the base of email verification links | `http://localhost:3001` |
+| `REDIS_URL` | Rate-limit store **inside Docker** | `redis://redis:6379` |
+| `SMTP_HOST` / `SMTP_PORT` | Where verification emails go. Defaults hit the bundled Mailpit catcher | `mailpit` / `1025` |
+| `SMTP_USER` / `SMTP_PASS` | Only for a real mail provider | leave empty for Mailpit |
+| `MAIL_FROM` | Sender of verification emails | `"Imani Vision <no-reply@imani.local>"` |
 
 > ⚠️ Inside Docker, services find each other by **name** (`db`, `ml`), not `localhost`.
 >
@@ -88,8 +92,13 @@ Same values as the root `.env`, but using `localhost` because the gateway runs *
 | `ML_SERVICE_API_KEY` | **Exactly the same** as in the root `.env` |
 | `JWT_SECRET` | Same as root `.env` |
 | `PORTAL_ORIGIN` | `http://localhost:3001` |
+| `REDIS_URL` | `redis://localhost:6379` |
+| `SMTP_HOST` / `SMTP_PORT` | `localhost` / `1025` |
+| `MAIL_FROM` | Same as root `.env` |
 
-The gateway refuses to start if `ML_SERVICE_API_KEY` or `PORTAL_ORIGIN` is missing — that's deliberate.
+The gateway refuses to start if any of these (except `SMTP_USER`/`SMTP_PASS`) is missing — that's deliberate.
+
+Verification emails land in **Mailpit** at http://localhost:8025 (your machine only). Nothing is really sent.
 
 ### Step 4 — `portal/.env.local`
 
@@ -186,14 +195,23 @@ docker ps                               # face-api should say (healthy)
 curl http://localhost:3000/             # gateway → "Hello World!"
 ```
 
-Try the face flow with your own photo (**this stores a face embedding in your local database**):
+The full developer flow (**this stores a face embedding in your local database**):
+
+1. Sign up in the portal (http://localhost:3001/sign-up), open the email in Mailpit (http://localhost:8025) and click the link.
+2. Sign in, create an API key on **API Keys**.
+3. Call the API with it:
 
 ```bash
-# Register
-curl -X POST http://localhost:3000/auth/register -F "email=you@example.com" -F "image=@path/to/photo.jpg"
-# Log in with a second photo of the same person
-curl -X POST http://localhost:3000/auth/login -F "email=you@example.com" -F "image=@path/to/photo2.jpg"
+KEY=sk_live_...
+# Enroll a person under your own id for them. consent=true is mandatory.
+curl -X PUT http://localhost:3000/v1/subjects/customer-42 -H "x-api-key: $KEY" -F "consent=true" -F "image=@photo.jpg"
+# 1:1 verify a new photo against that person -> {"match": true, "confidence": 0.87}
+curl -X POST http://localhost:3000/v1/subjects/customer-42/verify -H "x-api-key: $KEY" -F "image=@photo2.jpg"
+# Right to be forgotten
+curl -X DELETE http://localhost:3000/v1/subjects/customer-42 -H "x-api-key: $KEY"
 ```
+
+Or use **Live Test** in the dashboard, which does the same with your webcam.
 
 On Windows PowerShell, write `curl.exe` instead of `curl`.
 
@@ -332,13 +350,19 @@ The NestJS application is the central orchestrator. All requests from clients an
 api-gateway/
 ├── src/
 │   ├── app.module.ts           # Root module — wires everything together
-│   ├── main.ts                 # Bootstrap, CORS (locked to PORTAL_ORIGIN), port
+│   ├── main.ts                 # Bootstrap, helmet, CORS (locked to PORTAL_ORIGIN), port
 │   ├── auth/
-│   │   ├── auth.controller.ts  # Route handlers (register, login, verify-face)
-│   │   ├── auth.service.ts     # Business logic — calls ML service (with key), issues JWTs
-│   │   ├── auth.module.ts      # JWT + HttpModule configuration
+│   │   ├── auth.controller.ts  # Sign-up, email verification, logins, delete account
+│   │   ├── auth.service.ts     # Accounts, verification tokens, face-login demo, JWTs
+│   │   ├── mail.service.ts     # Verification emails over SMTP (nodemailer)
 │   │   ├── jwt-auth.guard.ts   # Validates Bearer JWTs (for portal users)
-│   │   └── api-key.guard.ts    # Validates sk_live_ API keys (for developers)
+│   │   ├── api-key.guard.ts    # Validates sk_live_ API keys (for developers)
+│   │   └── developer-auth.guard.ts  # /v1: API key OR portal session, verified email only
+│   ├── subjects/               # /v1/subjects — enroll (with consent), verify 1:1, delete
+│   ├── ml/ml.service.ts        # The only caller of the ML service. No matching in TypeScript.
+│   ├── rate-limit/             # Redis token bucket guard (limits are set in rate-limit.guard.ts)
+│   ├── usage/                  # Per-call metering (api_usage) + GET /usage
+│   ├── common/                 # Image upload validation, zod validation pipe
 │   ├── api-keys/
 │   │   ├── api-keys.controller.ts  # CRUD routes for API key management
 │   │   ├── api-keys.service.ts     # Key generation, hashing, validation logic
@@ -348,8 +372,6 @@ api-gateway/
 │       └── schema.ts           # Database table definitions
 ├── drizzle.config.ts           # Drizzle Kit config (schema push)
 ├── Dockerfile                  # Builds the gateway; pushes schema on start
-├── test/
-│   └── app.e2e-spec.ts
 └── package.json
 ```
 
@@ -357,11 +379,26 @@ api-gateway/
 
 | Route | Auth | Purpose |
 |-------|------|---------|
-| `POST /auth/email-register` | None | Register with email + password |
+| `POST /auth/email-register` | None | Register with email + password; emails a verification link |
+| `POST /auth/verify-email` | None | Confirm the emailed token (single use, 24 h) |
 | `POST /auth/email-login` | None | Login with email + password → JWT |
-| `POST /auth/register` | None | Register with email + face image → JWT |
-| `POST /auth/login` | None | Login with email + face image → JWT |
-| `POST /auth/verify-face` | API Key | External developer endpoint — verify a face |
+| `POST /auth/register` | None | Face-login demo: email + face image + `consent=true` → JWT |
+| `POST /auth/login` | None | Face-login demo: email + face image → JWT (1:1 against that email) |
+| `DELETE /auth/me` | JWT | Delete my account and everything attached to it |
+
+All anonymous auth routes are rate limited per IP (5 burst, then 1 per 12 s).
+
+**Face API** (`/v1`, API key or portal session; verified email required; rate limited per key: 20 burst, 60/min; every call metered)
+
+| Route | Purpose |
+|-------|---------|
+| `PUT /v1/subjects/:externalId` | Enroll or re-enroll a person. Multipart `image` + `consent=true` (+ optional `consent_reference`). Records a timestamped consent row. |
+| `POST /v1/subjects/:externalId/verify` | 1:1 verify `image` against that person → `{ match, confidence }` |
+| `DELETE /v1/subjects/:externalId` | Delete the person, their template and consent records |
+
+`externalId` is the developer's own id for the person (1–128 of `A-Z a-z 0-9 _ . @ : -`). Images: JPEG/PNG/WebP (checked by content), max 5 MB. Responses carry `X-RateLimit-Limit/Remaining/Reset`; 429s carry `Retry-After`.
+
+**Usage** — `GET /usage` (JWT): last 30 days by day and by key, plus the rate limit.
 
 **API Key Routes** (all require JWT)
 
@@ -374,8 +411,11 @@ api-gateway/
 
 **Database Schema (`db/schema.ts`)**
 
-- **`users`** — `id`, `email`, `password` (bcrypt), `created_at`
-- **`biometrics`** — `id`, `user_id` (FK), `embedding` (pgvector, 512 dims), `created_at`
+- **`users`** — `id`, `email`, `password` (bcrypt; null for face-only demo accounts), `email_verified_at`, verification token hash + expiry, `created_at`
+- **`subjects`** — `id`, `developer_id` (FK users), `external_id` — unique per developer
+- **`consents`** — `id`, `subject_id` (FK), `method` (`api` / `portal` / `self-enrollment`), `reference`, `granted_at`
+- **`biometrics`** — `id`, `subject_id` (FK, unique), `consent_id` (FK, **NOT NULL** — no embedding without consent), `embedding` (pgvector, 512 dims), `created_at`
+- **`api_usage`** — `id`, `user_id`, `api_key_id`, `endpoint`, `status_code`, `created_at`
 - **`api_keys`** — `id`, `user_id` (FK), `name`, `prefix`, `hashed_key`, `last_four`, `scopes`, `is_revoked`, `last_used_at`, `expires_at`, `created_at`
 
 **API Key Security Model**
@@ -494,6 +534,15 @@ Environment variables are listed in [A2](#a2-first-time-setup-secrets).
 | ML service + DB not publicly reachable | Done (M0) |
 | Gateway authenticates to ML service | Done (M0) |
 | Gateway CORS locked to the portal | Done (M0) |
+| `helmet` security headers | Done (M0) |
+| One matching path, one τ (`app/matching.py`), tested at/around τ | Done (M1) |
+| Consent at enrollment, enforced by a NOT NULL FK | Done (M1) |
+| Data deletion: per subject and whole account | Done (M1) |
+| Redis token-bucket rate limiting (fails closed) | Done (M1) |
+| Usage metering per key + real usage page | Done (M1) |
+| Image validation (type by content, 5 MB) | Done (M1) |
+| Email verification before keys / `/v1` | Done (M1) |
+| Enrolled faces scoped per developer (`/v1/subjects`) | Done (M1) |
 
 ---
 
@@ -501,22 +550,22 @@ Environment variables are listed in [A2](#a2-first-time-setup-secrets).
 
 #### Critical gaps
 
-**1. No Redis / Rate Limiting**
+**1. ~~No Redis / Rate Limiting~~ — fixed in M1**
 No rate limiting on any endpoint — a caller can make unlimited requests per second (password guessing, flooding the ML service, running up cost). Planned: Redis token bucket returning `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`. Most critical gap before any public launch.
 
 **2. No Stripe / Billing** — *deferred (future work)*
 The usage page shows a static credit balance. Build usage *metering* now (gap 3) so billing can read it later.
 
-**3. No API Call Logging / Metering**
+**3. ~~No API Call Logging / Metering~~ — fixed in M1**
 No table records API calls; the usage chart is mock data.
 
-**4. No Consent Record**
+**4. ~~No Consent Record~~ — fixed in M1**
 Biometric data needs recorded consent. No embedding may be stored without a logged, timestamped consent record. Entirely absent today.
 
 **5. API Keys Hashed with SHA-256, Not bcrypt/Argon2**
 SHA-256 is a fast hash; the spec asks for Argon2/bcrypt.
 
-**6. No Image Validation (file type + size)**
+**6. ~~No Image Validation~~ — fixed in M1**
 Any file of any size is forwarded to the ML service.
 
 **7. No Face Bounding Box Endpoint**
@@ -525,49 +574,44 @@ MediaPipe detects boxes in `engine.py`, but no endpoint exposes them.
 **8. No JavaScript SDK**
 `examples/react-frontend-integration.tsx` is a pattern, not an SDK.
 
-**9. Live Test demo is broken**
+**9. ~~Live Test demo is broken~~ — fixed in M1** (now enroll → verify → delete via `/v1`)
 `demo-widget.tsx` posts to `/api/proxy/verify`, which doesn't exist in the portal. Fix is an M0 task.
 
 #### Security loopholes
 
 **10. No Replay Attack Protection** — no timestamps/nonces on critical operations.
 
-**11. Two matching paths**
+**11. ~~Two matching paths~~ — fixed in M1**
 The gateway computes cosine similarity in TypeScript instead of calling the ML service's `/verify_user`. Two implementations and two thresholds can diverge. First M1 task.
 
-**12. Placeholder Password for Face-Auth Users**
+**12. ~~Placeholder Password for Face-Auth Users~~ — fixed in M1** (nullable password)
 Face-registered users get a bcrypt hash of `'placeholder-password'` because `password` is non-nullable. Needs a nullable password or an `auth_method` column.
 
-**13. No Email Verification** — sign-up grants API keys immediately.
+**13. ~~No Email Verification~~ — fixed in M1** — sign-up grants API keys immediately.
 
 **14. No per-key Allowed Origins**
 Global CORS is now locked to the portal (M0), but there are no "publishable keys" with per-key origin restrictions.
 
-**15. No Right to be Forgotten** — no endpoint deletes a user's data, embeddings or logs.
+**15. ~~No Right to be Forgotten~~ — fixed in M1** — no endpoint deletes a user's data, embeddings or logs.
 
-**16. Usage Data in the Portal Is Hardcoded** — plan, balance and rate limit are static strings.
+**16. ~~Usage Data in the Portal Is Hardcoded~~ — fixed in M1** — plan, balance and rate limit are static strings.
 
 **17. No TLS Enforcement** — fine locally, must be addressed before deployment.
 
-**18. No `helmet` on the gateway** — standard security headers aren't set. M0 task.
+**18. ~~No `helmet` on the gateway~~ — fixed in M0** — standard security headers aren't set. M0 task.
 
 ---
 
 ## 7. What Needs to Be Built Next
 
-Follow `IMANI_BUILD_PLAN.md` milestone by milestone. At the time of writing:
+Follow `IMANI_BUILD_PLAN.md`. M0 and M1 are built; next is **M2 — cancelable biometrics**, starting with the throwaway spike.
 
-**Finish M0**
-1. Add `helmet` to the gateway.
-2. Fix the Live Test demo route (gap 9).
-3. Commit on a feature branch, push, protect `main`.
-
-**M1 (foundation)**
-1. One matching path: call `/verify_user`, delete the TypeScript cosine comparison (gap 11) — with tests at, just above and just below τ.
-2. Tests for `ApiKeyAuthGuard` (valid / revoked / malformed).
-3. Consent at enrollment (gap 4) · data deletion (gap 15) · rate limiting (gap 1) · real usage tracking (gaps 3, 16) · image validation (gap 6) · email verification (gap 13).
-
----
+Known limits carried out of M1 (deliberate, documented):
+- API keys are still SHA-256 hashed (gap 5).
+- Portal users who sign in with GitHub/Google get no gateway session, so keys and the Live Test only work for email/password accounts.
+- `DELETE /auth/me` trusts the JWT alone (no password re-entry).
+- Verification returns `confidence`; rate limiting is the mitigation against score hill-climbing.
+- `examples/` still shows the old `verify-face` endpoint.
 
 ## 8. Security Issues & Fix Plan
 
@@ -575,7 +619,7 @@ From the AttackSurface review (last assessed 2026-07-08; 2 HIGH open at the time
 
 | # | Issue | Severity | Status | Fix |
 |---|-------|----------|--------|-----|
-| 1 | Gateway had no rate limiting and no `helmet`; CORS open to every site | HIGH | **Partly fixed** — CORS locked to `PORTAL_ORIGIN` (M0). Rate limiting and `helmet` still open. | `helmet` in M0; Redis token-bucket rate limiting in M1. |
+| 1 | Gateway had no rate limiting and no `helmet`; CORS open to every site | HIGH | **Fixed** — CORS locked (M0), `helmet` (M0), Redis token-bucket rate limiting that fails closed (M1). | — |
 | 2 | ML service didn't check who was calling, and its port (and the DB's) was published to the network | HIGH | **Fixed (M0)** — no public ports for `ml`/`db`; ML service requires `X-ML-Service-Key` and won't start without it. Verified: direct calls without the key get 401; the gateway's calls are accepted. | — |
 | 3 | Hardcoded secrets in `docker-compose.yml` (JWT secret, DB `user`/`password`) | Medium | **Fixed (M0)** — all secrets from `.env`. The old values are in git history (commit `0b4cd76`): **never reuse them**. | Rotated by choosing new values. |
 | 4 | Gateway Docker image included `api-gateway/.env` | Medium | **Fixed (M0)** — `api-gateway/.dockerignore`. | — |

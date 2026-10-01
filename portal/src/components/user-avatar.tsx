@@ -1,7 +1,8 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +14,21 @@ import {
 
 interface UserAvatarProps {
   className?: string;
+}
+
+async function deleteAccount() {
+  if (
+    !confirm(
+      "Delete your account? This permanently removes your API keys, every face you enrolled, their consent records and your usage history.",
+    )
+  )
+    return;
+  const res = await fetch("/api/account", { method: "DELETE" });
+  if (!res.ok) {
+    toast.error("Couldn't delete your account. Please try again.");
+    return;
+  }
+  await signOut({ callbackUrl: "/" });
 }
 
 export function UserAvatar({ className }: UserAvatarProps) {
@@ -67,6 +83,14 @@ export function UserAvatar({ className }: UserAvatarProps) {
         >
           <LogOut className="h-4 w-4" />
           Sign out
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={deleteAccount}
+          className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete account
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

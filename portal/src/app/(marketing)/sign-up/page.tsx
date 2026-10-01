@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, MailCheck, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,15 +26,14 @@ export default function SignUpPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Register via our Next.js API route (which proxies to NestJS)
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,28 +44,40 @@ export default function SignUpPage() {
 
       if (!res.ok) {
         setError(data.error || "Registration failed");
-        setIsLoading(false);
         return;
       }
 
-      // Auto-login after successful registration
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError("Account created! Please sign in.");
-        setIsLoading(false);
-      } else {
-        window.location.href = "/dashboard";
-      }
+      setSentTo(email);
     } catch {
       setError("Something went wrong. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
+
+  if (sentTo) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
+        <div className="w-full max-w-md space-y-4 text-center">
+          <MailCheck className="mx-auto h-10 w-10 text-primary" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Check your email
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            We sent a verification link to{" "}
+            <span className="font-medium text-foreground">{sentTo}</span>.
+            Verify your email, then sign in to create API keys.
+          </p>
+          <Link
+            href="/sign-in"
+            className="inline-block text-sm font-medium text-primary hover:underline"
+          >
+            Go to sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
@@ -109,7 +121,7 @@ export default function SignUpPage() {
             <Input
               id="password"
               type="password"
-              placeholder="Minimum 6 characters"
+              placeholder="Minimum 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

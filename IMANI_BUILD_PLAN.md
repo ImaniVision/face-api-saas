@@ -19,14 +19,14 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
 > **Order matters here:** strip secrets → THEN commit. If you commit first and remove secrets
 > later, the secret is in git history forever (and must be rotated).
 
-- [ ] Create `.env` from `.env.example`; move ALL secrets out of `docker-compose.yml` and any source into env vars.
-- [ ] Add `.env` (and `*.env`) to `.gitignore`. Commit `.env.example` with **placeholder** values only.
-- [ ] If `JWT_SECRET`, DB creds, or any key was **ever committed before**, rotate them now.
-- [ ] Initialize/normalize git, commit current work, push to shared remote (GitHub). Protect `main`; enable PR-based workflow.
-- [ ] Close network exposure in `docker-compose.yml`: remove the `8000:8000` (ML service) and `5432:5432` (Postgres) host port mappings so they're only reachable inside the Docker network.
-- [ ] Lock CORS on the gateway to the portal's origin (no wildcard). Add `helmet`.
-- [ ] Fix the broken demo: the Live Test page posts to `/api/proxy/verify`, which doesn't exist (`portal/src/components/demo-widget.tsx:68`). Add the proxy route or point it at the real endpoint.
-- [ ] Write down the 2 open security issues + their fix plan in `documentation.md`.
+- [x] Create `.env` from `.env.example`; move ALL secrets out of `docker-compose.yml` and any source into env vars.
+- [x] Add `.env` (and `*.env`) to `.gitignore`. Commit `.env.example` with **placeholder** values only.
+- [x] If `JWT_SECRET`, DB creds, or any key was **ever committed before**, rotate them now.
+- [x] Initialize/normalize git, commit current work, push to shared remote (GitHub). Protect `main`; enable PR-based workflow.
+- [x] Close network exposure in `docker-compose.yml`: remove the `8000:8000` (ML service) and `5432:5432` (Postgres) host port mappings so they're only reachable inside the Docker network.
+- [x] Lock CORS on the gateway to the portal's origin (no wildcard). Add `helmet`.
+- [x] Fix the broken demo: the Live Test page posts to `/api/proxy/verify`, which doesn't exist (`portal/src/components/demo-widget.tsx:68`). Add the proxy route or point it at the real endpoint.
+- [x] Write down the 2 open security issues + their fix plan in `documentation.md`.
 
 **Done when:** repo is shared and secret-free · every teammate can pull & run it · ML service and DB are not internet-reachable · the demo verifies a face end-to-end.
 
@@ -36,15 +36,15 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
 
 **Goal:** turn the prototype into a small, real, safe product. Only build the gaps needed by BOTH the modest API and the future product.
 
-- [ ] 🔒 Route all matching through the ML service (`/verify_user`); **delete the TypeScript cosine comparison.** One τ, one place.
-- [ ] 🔒 Tests: `ApiKeyAuthGuard` (valid / revoked / malformed key).
-- [ ] 🔒 Tests: face-match decision at, just-above, and just-below τ.
-- [ ] Consent at enrollment — mandatory, logged, timestamped. No embedding stored without it.
-- [ ] Data-deletion endpoint ("delete my data" / right to be forgotten).
-- [ ] Rate limiting on the gateway (Redis token bucket).
-- [ ] Real usage tracking (replace the fake dashboard numbers; store per-key call counts).
-- [ ] Image validation on upload (file type + size limits).
-- [ ] Email verification before keys are usable.
+- [x] 🔒 Route all matching through the ML service (`/verify_user`); **delete the TypeScript cosine comparison.** One τ, one place.
+- [x] 🔒 Tests: `ApiKeyAuthGuard` (valid / revoked / malformed key).
+- [x] 🔒 Tests: face-match decision at, just-above, and just-below τ.
+- [x] Consent at enrollment — mandatory, logged, timestamped. No embedding stored without it.
+- [x] Data-deletion endpoint ("delete my data" / right to be forgotten).
+- [x] Rate limiting on the gateway (Redis token bucket).
+- [x] Real usage tracking (replace the fake dashboard numbers; store per-key call counts).
+- [x] Image validation on upload (file type + size limits).
+- [x] Email verification before keys are usable.
 
 **Done when:** a developer can *sign up → verify email → give consent → get a key → be rate-limited → verify faces → delete their data*, and the auth/matching path has passing tests.
 
