@@ -55,36 +55,20 @@ class FaceEngine:
     
     def _preprocess_image(self, image_bytes: bytes) -> np.ndarray:
         """
-        Convert image bytes to numpy array in RGB format.
-        
-        Args:
-            image_bytes: Raw image bytes
-            
-        Returns:
-            numpy array in RGB format
+        Decode image bytes to a BGR numpy array (OpenCV's order, which InsightFace expects).
         """
-        # Decode image
         nparr = np.frombuffer(image_bytes, np.uint8)
-        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        if image is None:
+        image_bgr = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if image_bgr is None:
             raise ValueError("Failed to decode image")
-        
-        # Convert BGR to RGB (MediaPipe and InsightFace expect RGB)
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return image_rgb
-    
-    def _detect_faces(self, image_rgb: np.ndarray) -> int:
+        return image_bgr
+
+    def _detect_faces(self, image_bgr: np.ndarray) -> int:
         """
-        Detect faces in the image using MediaPipe.
-        
-        Args:
-            image_rgb: Image in RGB format
-            
-        Returns:
-            Number of faces detected
+        Count faces with MediaPipe, which (unlike InsightFace) expects RGB.
         """
-        results = self.face_detector.process(image_rgb)
+        results = self.face_detector.process(cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB))
         
         if not results.detections:
             return 0
@@ -109,19 +93,19 @@ class FaceEngine:
         Raises:
             ValueError: If no face or multiple faces are detected
         """
-        # Preprocess image
-        image_rgb = self._preprocess_image(image_bytes)
-        
+        image_bgr = self._preprocess_image(image_bytes)
+
         # Detect faces using MediaPipe (fast pre-check)
-        num_faces = self._detect_faces(image_rgb)
+        num_faces = self._detect_faces(image_bgr)
         
         if num_faces == 0:
             raise ValueError("No face detected in the image")
         elif num_faces > 1:
             raise ValueError(f"Multiple faces detected ({num_faces}). Please ensure only one face is visible")
         
-        # Generate embedding using InsightFace
-        faces = self.face_analyzer.get(image_rgb)
+        # InsightFace expects BGR; feeding it RGB cost 10 points of FRR at τ on LFW
+        # (spikes/ironmask/RESULTS.md).
+        faces = self.face_analyzer.get(image_bgr)
         
         if len(faces) == 0:
             raise ValueError("Face detected but embedding generation failed")
