@@ -58,14 +58,14 @@ export function DashboardSidebar({
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <Image
             src="/logo.svg"
-            alt="FaceAuth"
+            alt="Imani Vision"
             width={26}
             height={26}
             className="h-[26px] w-[26px]"
           />
           {!collapsed && (
             <span className="text-[15px] font-semibold tracking-tight text-foreground">
-              FaceAuth{" "}
+              Imani Vision{" "}
               <span className="text-muted-foreground font-normal">
                 Platform
               </span>

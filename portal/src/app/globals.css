@@ -125,34 +125,18 @@
   }
 }
 
-/* Scrolling animations for logo cloud and testimonials */
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
+/* Docs prose: the typography plugin isn't installed, so style the few elements the docs use. */
+@layer components {
+  .prose h3 {
+    @apply mt-8 mb-3 text-xl font-semibold text-foreground;
   }
-  100% {
-    transform: translateX(-50%);
+  .prose p {
+    @apply my-4 leading-7 text-muted-foreground;
   }
-}
-
-@keyframes scroll-slow {
-  0% {
-    transform: translateX(0);
+  .prose :not(pre) > code {
+    @apply rounded bg-muted px-1.5 py-0.5 font-mono text-sm text-foreground;
   }
-  100% {
-    transform: translateX(-50%);
+  .prose a {
+    @apply text-primary underline;
   }
-}
-
-.animate-scroll {
-  animation: scroll 25s linear infinite;
-}
-
-.animate-scroll-slow {
-  animation: scroll-slow 40s linear infinite;
-}
-
-.animate-scroll:hover,
-.animate-scroll-slow:hover {
-  animation-play-state: paused;
 }

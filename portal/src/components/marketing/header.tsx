@@ -35,26 +35,26 @@ const features = [
   {
     icon: ScanFace,
     title: "Face Verification",
-    description: "1:1 identity verification with 99.7% accuracy",
-    href: "#verification",
+    description: "Is this photo the person enrolled under this ID?",
+    href: "/docs/verification",
   },
   {
     icon: ShieldCheck,
-    title: "Liveness Detection",
-    description: "Anti-spoofing with passive liveness checks",
-    href: "#liveness",
+    title: "Protected Templates",
+    description: "No stored record can be turned back into a face",
+    href: "/docs/enrollment",
   },
   {
     icon: LineChart,
-    title: "Analytics Dashboard",
-    description: "Real-time metrics and usage analytics",
-    href: "#analytics",
+    title: "Usage Dashboard",
+    description: "Calls per day and per API key, last 30 days",
+    href: "/dashboard/usage",
   },
   {
     icon: Terminal,
-    title: "Developer SDKs",
-    description: "Python, Node.js, Go, and REST API",
-    href: "#sdks",
+    title: "REST API",
+    description: "Enroll, verify and delete over plain HTTP",
+    href: "/docs",
   },
 ];
 
@@ -78,13 +78,13 @@ export function Header() {
         <Link href="/" className="flex items-center gap-3 group shrink-0">
           <Image
             src="/logo.svg"
-            alt="FaceAuth Logo"
+            alt="Imani Vision Logo"
             width={32}
             height={32}
             className="h-8 w-8"
           />
           <span className="text-lg font-bold tracking-tight text-foreground">
-            FaceAuth
+            Imani Vision
           </span>
         </Link>
 
@@ -182,7 +182,7 @@ export function Header() {
             <SheetContent side="right" className="w-80">
               <SheetTitle className="flex items-center gap-2 mb-6">
                 <Scan className="h-5 w-5" />
-                FaceAuth
+                Imani Vision
               </SheetTitle>
               <nav className="flex flex-col gap-1">
                 <p className="px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">

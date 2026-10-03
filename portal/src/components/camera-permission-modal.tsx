@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Camera, ShieldAlert } from "lucide-react";
 import Link from "next/link";
+import { Camera, ShieldAlert } from "lucide-react";
 
 interface CameraPermissionModalProps {
   isOpen: boolean;
@@ -43,20 +43,23 @@ export function CameraPermissionModal({
               <Camera className="h-5 w-5 text-fuchsia-400" />
             </div>
             <DialogTitle className="text-xl">
-              Biometric Scan Consent
+              Turn on your camera
             </DialogTitle>
           </div>
           <DialogDescription className="text-base text-muted-foreground/90 leading-relaxed">
-            We use your camera to securely identify and log you in through
-            facial recognition.
+            The Live Test takes photos with your camera. Nothing leaves your
+            browser until you press Enroll or Verify.
             <br />
             <br />
             <span className="font-medium text-foreground">
-              Important Privacy Notice:
+              What we keep:
             </span>{" "}
-            Your facial data is securely processed, never sold, and stored only
-            temporarily according to our strict retention policy to verify your
-            identity.
+            photos are used once to compute a face embedding and are never
+            saved. Enrolling stores only a protected template that can&apos;t
+            be turned back into your face, and you can delete it at any time.{" "}
+            <Link href="/privacy" className="text-foreground underline underline-offset-2">
+              Privacy policy
+            </Link>
           </DialogDescription>
         </DialogHeader>
 
@@ -73,26 +76,9 @@ export function CameraPermissionModal({
                 htmlFor="consent"
                 className="text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                I explicitly consent to the collection and processing of my
-                biometric facial data for authentication purposes.
+                I understand my photos are sent to Imani Vision when I press
+                Enroll or Verify.
               </label>
-              <p className="text-xs text-muted-foreground pt-1">
-                By ticking this box, you agree to our{" "}
-                <Link
-                  href="/privacy"
-                  className="text-fuchsia-400 hover:text-fuchsia-300 underline underline-offset-2 transition-colors"
-                >
-                  Privacy Policy
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/terms"
-                  className="text-fuchsia-400 hover:text-fuchsia-300 underline underline-offset-2 transition-colors"
-                >
-                  Terms of Service
-                </Link>
-                .
-              </p>
             </div>
           </div>
         </div>

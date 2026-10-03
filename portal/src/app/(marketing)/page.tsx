@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ChevronRight, Terminal } from "lucide-react";
+import { ArrowRight, ChevronRight, ShieldCheck, Target, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FAQ } from "@/components/marketing/faq";
 import { ParticlesBg } from "@/components/marketing/particles-bg";
@@ -32,15 +32,15 @@ export default function HomePage() {
         <div className="flex flex-col items-center text-center w-full">
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-xs sm:text-sm border rounded-full text-muted-foreground border-border bg-background/50 backdrop-blur-md shadow-sm">
             <span className="flex w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_2px_rgba(255,255,255,0.4)] dark:shadow-[0_0_10px_2px_rgba(255,255,255,0.8)]"></span>
-            1,254 happy customers
+            Beta: free while we test it
           </div>
           <h1 className="max-w-4xl text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tighter text-foreground leading-[1.1] sm:leading-[1.1] md:leading-[1.05]">
-            Facial Recognition Infrastructure for Modern Apps
+            Face verification that stores no face
           </h1>
           <p className="max-w-2xl mt-6 sm:mt-8 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
-            FaceAuth is the developer-first facial verification API. Integrate
-            face matching, liveness detection, and identity analytics into your
-            application in minutes — not months.
+            Enroll a person from five photos. Later, send one new photo and get
+            back a yes or no. We keep a hash and a random rotation per person,
+            so a stolen database gives an attacker no face to rebuild.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mt-8 sm:mt-10 w-full sm:w-auto px-4 sm:px-0">
             <Link href="/sign-up" className="w-full sm:w-auto">
@@ -48,7 +48,7 @@ export default function HomePage() {
                 size="lg"
                 className="w-full h-12 px-8 text-base shadow-sm"
               >
-                Get Started for Free
+                Get an API key
               </Button>
             </Link>
             <Link href="#features" className="w-full sm:w-auto">
@@ -57,7 +57,7 @@ export default function HomePage() {
                 variant="outline"
                 className="w-full h-12 px-8 text-base shadow-sm bg-background/50 backdrop-blur-sm"
               >
-                Request Demo <ArrowRight className="w-4 h-4 ml-2" />
+                See how it works <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
           </div>
@@ -74,60 +74,40 @@ export default function HomePage() {
             {/* Text description */}
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
-                Integrate in minutes.
+                Three HTTP calls.
               </h2>
               <p className="mt-4 text-base sm:text-lg text-muted-foreground">
-                Powerful APIs and client SDKs that seamlessly integrate into
-                your existing authentication flows. Drop in our widget or build
-                entirely from scratch.
+                Enroll, verify, delete. There is no SDK to install: anything
+                that can send a multipart request can use it.
               </p>
 
               <div className="mt-10 space-y-8">
                 <div className="flex gap-4">
                   <div className="flex items-center justify-center w-10 h-10 border rounded-lg shrink-0 bg-background border-border">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
+                    <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold">
-                      Liveness Detection
+                      Protected templates
                     </h3>
                     <p className="mt-2 text-muted-foreground">
-                      Prevent spoofing attacks with active and passive liveness
-                      checks certified to iBeta Level 2 standards.
+                      Each person is stored as a SHA-256 hash and a random
+                      512×512 rotation (IronMask). Recovering the face
+                      embedding from a stolen record takes about 2^91 guesses.
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="flex items-center justify-center w-10 h-10 border rounded-lg shrink-0 bg-background border-border">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                    </svg>
+                    <Target className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold">Face Matching</h3>
+                    <h3 className="text-xl font-semibold">Measured accuracy</h3>
                     <p className="mt-2 text-muted-foreground">
-                      Compare faces in milliseconds with 99.98% accuracy. Scales
-                      instantly to millions of identity records.
+                      On the LFW benchmark, 2.1% of genuine attempts were
+                      rejected and none of 155,000 impostor attempts got
+                      through. Every check is one photo against one enrolled
+                      person, never a search.
                     </p>
                   </div>
                 </div>
@@ -161,11 +141,12 @@ export default function HomePage() {
         <div className="px-4 sm:px-6 mx-auto text-center w-full max-w-7xl">
           <Terminal className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-6 text-muted-foreground/50" />
           <h2 className="mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
-            Write in code, not config.
+            Try it on your own face.
           </h2>
           <p className="max-w-2xl mx-auto mb-8 sm:mb-10 text-base sm:text-lg md:text-xl text-muted-foreground px-4">
-            Our API is designed for developers who want to ship fast and iterate
-            quickly. Enroll, verify and delete with three plain HTTP calls.
+            Sign up, open Live Test in the dashboard, enroll from five webcam
+            photos, then verify a new selfie. You can delete the template with
+            one click when you&apos;re done.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto px-4 sm:px-0">
             <Link href="/sign-up" className="w-full sm:w-auto">
@@ -191,115 +172,20 @@ export default function HomePage() {
 
       {/* Pricing Section */}
       <section className="relative z-10 py-16 sm:py-24 border-t border-border bg-background/95 backdrop-blur-xl">
-        <div className="px-4 sm:px-6 mx-auto w-full max-w-7xl">
-          <div className="mb-12 sm:mb-16 text-center">
-            <h2 className="mb-4 text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
-              Simple, transparent pricing
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
-              Start for free, scale when you need to.
-            </p>
-          </div>
-
-          <div className="grid gap-6 sm:gap-8 md:grid-cols-3 max-w-5xl mx-auto align-top">
-            {/* Free */}
-            <div className="flex flex-col p-8 border rounded-2xl bg-background border-border">
-              <h3 className="text-xl font-semibold">Free</h3>
-              <p className="mt-2 text-muted-foreground">
-                For side projects and prototyping.
-              </p>
-              <div className="my-6">
-                <span className="text-4xl font-bold">$0</span>
-                <span className="text-muted-foreground">/mo</span>
-              </div>
-              <ul className="flex-1 space-y-4 text-sm text-foreground/80 mb-8">
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> 100
-                  verifications/month
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Basic face matching
-                  API
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Community Support
-                </li>
-              </ul>
-              <Button variant="outline" className="w-full">
-                Get Started
-              </Button>
-            </div>
-
-            {/* Pro - visually elevated */}
-            <div className="flex flex-col p-8 border-2 rounded-2xl bg-background border-foreground shadow-xl relative -mt-4 mb-4 md:-mt-4 md:mb-0">
-              <div className="absolute top-0 right-8 transform -translate-y-1/2">
-                <span className="bg-foreground text-background text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  Most Popular
-                </span>
-              </div>
-              <h3 className="text-xl font-semibold">Pro</h3>
-              <p className="mt-2 text-muted-foreground">
-                For scaling production applications.
-              </p>
-              <div className="my-6">
-                <span className="text-4xl font-bold">$49</span>
-                <span className="text-muted-foreground">/mo</span>
-              </div>
-              <ul className="flex-1 space-y-4 text-sm text-foreground/80 mb-8">
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> 10,000
-                  verifications/month
-                </li>
-                <li className="flex gap-3 text-foreground font-medium">
-                  <span className="text-foreground">✓</span> Liveness detection
-                  included
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Priority email
-                  support
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Advanced analytics
-                  dashboard
-                </li>
-              </ul>
-              <Button className="w-full text-primary-foreground bg-primary">
-                Start Free Trial
-              </Button>
-            </div>
-
-            {/* Enterprise */}
-            <div className="flex flex-col p-8 border rounded-2xl bg-background border-border">
-              <h3 className="text-xl font-semibold">Enterprise</h3>
-              <p className="mt-2 text-muted-foreground">
-                For mission-critical workloads.
-              </p>
-              <div className="my-6">
-                <span className="text-4xl font-bold">Custom</span>
-              </div>
-              <ul className="flex-1 space-y-4 text-sm text-foreground/80 mb-8">
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Unlimited
-                  verifications
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Dedicated
-                  infrastructure
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> 24/7 SLA with
-                  account manager
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Custom deployment
-                  options
-                </li>
-              </ul>
-              <Button variant="outline" className="w-full">
-                Contact Sales
-              </Button>
-            </div>
-          </div>
+        <div className="px-4 sm:px-6 mx-auto w-full max-w-3xl text-center">
+          <h2 className="mb-4 text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
+            Free during the beta
+          </h2>
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
+            Every API key gets 60 calls a minute, with bursts of up to 20.
+            Calls are counted per key so paid plans can follow, but billing
+            isn&apos;t built yet.
+          </p>
+          <Link href="/pricing" className="inline-block mt-8">
+            <Button variant="outline" size="lg" className="h-12 px-8 text-base gap-2">
+              What&apos;s included <ChevronRight className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
       </section>
 

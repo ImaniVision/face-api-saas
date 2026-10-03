@@ -73,3 +73,6 @@ docker-compose.override.yml
 #Claude AI
 .claude
 CLAUDE.md
+
+# M2 spike: LFW download cache + embeddings (biometric data, never commit)
+spikes/ironmask/data/

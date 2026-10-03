@@ -18,13 +18,13 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-3 group shrink-0">
           <Image
             src="/logo.svg"
-            alt="FaceAuth Logo"
+            alt="Imani Vision Logo"
             width={32}
             height={32}
             className="h-8 w-8"
           />
           <span className="text-lg font-bold tracking-tight text-foreground">
-            FaceAuth
+            Imani Vision
           </span>
         </Link>
 

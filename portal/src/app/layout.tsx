@@ -15,12 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FaceAuth — Facial Recognition Infrastructure",
+  title: "Imani Vision: 1:1 face verification API",
   description:
-    "Enterprise-grade facial recognition API. Integrate face verification, liveness detection, and identity analytics into your application in minutes.",
+    "Enroll a person from 5 photos, then check whether a new photo is the same person. Stored templates can't be turned back into a face.",
 };
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { PrivacyNotice } from "@/components/privacy-notice";
 
 export default function RootLayout({
   children,
@@ -40,6 +41,7 @@ export default function RootLayout({
           >
             {children}
             <Toaster richColors position="bottom-right" />
+            <PrivacyNotice />
           </ThemeProvider>
         </body>
       </html>
