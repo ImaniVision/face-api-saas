@@ -3,13 +3,16 @@ import {
   uuid,
   text,
   timestamp,
-  vector,
   varchar,
   boolean,
   integer,
+  smallint,
   index,
   unique,
+  customType,
 } from 'drizzle-orm/pg-core';
+
+const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
 
 // Developers (portal accounts). `password` is null for face-only demo accounts.
 export const users = pgTable('users', {
@@ -46,7 +49,8 @@ export const consents = pgTable('consents', {
   grantedAt: timestamp('granted_at').defaultNow().notNull(),
 });
 
-// consent_id NOT NULL: the database itself refuses an embedding without a consent record.
+// consent_id NOT NULL: the database itself refuses a template without a consent record.
+// Cancelable (IronMask) template: digest + helper never reveal the face; no raw embedding is stored.
 export const biometrics = pgTable('biometrics', {
   id: uuid('id').defaultRandom().primaryKey(),
   subjectId: uuid('subject_id')
@@ -56,7 +60,10 @@ export const biometrics = pgTable('biometrics', {
   consentId: uuid('consent_id')
     .references(() => consents.id, { onDelete: 'cascade' })
     .notNull(),
-  embedding: vector('embedding', { dimensions: 512 }).notNull(),
+  digest: bytea('digest').notNull(),
+  helper: bytea('helper').notNull(),
+  // Layout of `helper`: 1 = fp32 (1 MiB), 2 = int8 (257 KiB). Rows of both can coexist.
+  templateVersion: smallint('template_version').notNull().default(1),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

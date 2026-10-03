@@ -1,18 +1,22 @@
 """
 FastAPI ML Service for Facial Biometric Authentication.
-Provides endpoints for face vectorization and verification.
+Enrols faces as cancelable (IronMask) templates and verifies against them. Raw embeddings
+never leave this service.
 """
 
-from fastapi import Depends, FastAPI, File, Header, UploadFile, HTTPException, Form
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from typing import List, Optional
+import base64
+import binascii
 import hmac
 import logging
-import json
 import os
+from typing import List, Optional
+
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 from app.engine import face_engine
+from app.protection import ENROLMENT_PHOTOS, FP32, HELPER_BYTES, ProtectedTemplate, enrolment_template, protect, verify
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +27,12 @@ logger = logging.getLogger(__name__)
 ML_SERVICE_API_KEY = os.environ.get("ML_SERVICE_API_KEY", "")
 if not ML_SERVICE_API_KEY:
     raise RuntimeError("ML_SERVICE_API_KEY is not set; the ML service will not start without gateway auth")
+
+# Format new templates are written in (1 = fp32, the validated production format; 2 = int8 candidate).
+# Verification reads every known format, so old and new templates coexist during a migration.
+ENROL_TEMPLATE_VERSION = int(os.environ.get("ENROL_TEMPLATE_VERSION", str(FP32)))
+if ENROL_TEMPLATE_VERSION not in HELPER_BYTES:
+    raise RuntimeError(f"ENROL_TEMPLATE_VERSION must be one of {sorted(HELPER_BYTES)}")
 
 
 async def require_gateway_key(x_ml_service_key: Optional[str] = Header(default=None)) -> None:
@@ -36,7 +46,7 @@ async def require_gateway_key(x_ml_service_key: Optional[str] = Header(default=N
 app = FastAPI(
     title="Facial Biometric ML Service",
     description="Stateless ML service for facial recognition authentication",
-    version="1.0.0"
+    version="2.0.0"
 )
 
 # CORS middleware for cross-origin requests
@@ -49,36 +59,16 @@ app.add_middleware(
 )
 
 
-# Pydantic models for request/response validation
-class VectorizeResponse(BaseModel):
-    """Response model for /vectorize endpoint."""
-    vector: List[float] = Field(..., description="512-dimensional facial embedding")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "vector": [0.12, -0.4, 0.23, "..."]
-            }
-        }
-
-
-class VerifyRequest(BaseModel):
-    """Request model for /verify_user endpoint (for saved_vector)."""
-    saved_vector: List[float] = Field(..., description="Previously saved 512D embedding from database")
+class EnrollResponse(BaseModel):
+    """A protected template. Store both fields; neither reveals the face on its own."""
+    digest: str = Field(..., description="Base64 SHA-256 of the secret codeword (32 bytes)")
+    helper: str = Field(..., description="Base64 orthogonal matrix P in the layout `version` names")
+    version: int = Field(..., description="Template format: 1 = fp32 (1 MiB), 2 = int8 (257 KiB)")
 
 
 class VerifyResponse(BaseModel):
-    """Response model for /verify_user endpoint."""
-    match: bool = Field(..., description="Whether the faces match")
-    confidence: float = Field(..., description="Similarity score (0.0 to 1.0)")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "match": True,
-                "confidence": 0.87
-            }
-        }
+    """No similarity score: a protected template only yields match / no match."""
+    match: bool = Field(..., description="Whether the face matches the enrolled template")
 
 
 @app.get("/")
@@ -87,7 +77,7 @@ async def root():
     return {
         "service": "Facial Biometric ML Service",
         "status": "operational",
-        "version": "1.0.0"
+        "version": "2.0.0"
     }
 
 
@@ -100,130 +90,78 @@ async def health_check():
     }
 
 
-@app.post("/vectorize", response_model=VectorizeResponse, dependencies=[Depends(require_gateway_key)])
-async def vectorize(file: UploadFile = File(...)):
-    """
-    Generate a 512-dimensional facial embedding from an uploaded image.
-    
-    **Usage**: Called during user registration/enrollment to generate the vector
-    that will be saved to the database.
-    
-    **Security**: 
-    - Returns 400 if no face is detected
-    - Returns 400 if multiple faces are detected (security risk)
-    
-    Args:
-        file: Image file (JPEG, PNG, etc.)
-        
-    Returns:
-        VectorizeResponse with 512D embedding vector
-        
-    Raises:
-        HTTPException 400: If face detection fails or multiple faces detected
-        HTTPException 500: If embedding generation fails
-    """
+async def _read_image(file: UploadFile, label: str) -> bytes:
+    image_bytes = await file.read()
+    if len(image_bytes) == 0:
+        raise HTTPException(status_code=400, detail=f"{label}: empty file uploaded")
+    return image_bytes
+
+
+def _embed(image_bytes: bytes, label: str) -> List[float]:
     try:
-        # Read image bytes
-        image_bytes = await file.read()
-        
-        if len(image_bytes) == 0:
-            raise HTTPException(status_code=400, detail="Empty file uploaded")
-        
-        # Generate embedding
-        vector = face_engine.image_to_vector(image_bytes)
-        
-        logger.info(f"Successfully generated vector for file: {file.filename}")
-        
-        return VectorizeResponse(vector=vector)
-    
+        return face_engine.image_to_vector(image_bytes)
     except ValueError as e:
-        # Face detection errors (no face, multiple faces, etc.)
-        error_msg = str(e)
-        logger.warning(f"Face detection error: {error_msg}")
-        raise HTTPException(status_code=400, detail=error_msg)
-    
-    except Exception as e:
-        # Unexpected errors
-        logger.error(f"Unexpected error in /vectorize: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error during vectorization")
+        # No face, several faces, undecodable: the caller can fix these by retaking the photo.
+        logger.warning(f"Face detection error ({label}): {e}")
+        raise HTTPException(status_code=400, detail=f"{label}: {e}")
 
 
-@app.post("/verify_user", response_model=VerifyResponse, dependencies=[Depends(require_gateway_key)])
-async def verify_user(
-    file: UploadFile = File(...),
-    saved_vector: str = Form(...)
-):
+@app.post("/enroll", response_model=EnrollResponse, dependencies=[Depends(require_gateway_key)])
+async def enroll(files: List[UploadFile] = File(...)):
     """
-    Verify if a live image matches a previously saved facial embedding.
-    
-    **Usage**: Called during user login to authenticate the user.
-    
-    **Flow**:
-    1. Backend retrieves saved_vector from database for the user
-    2. Backend sends live image + saved_vector to this endpoint
-    3. Service compares and returns match result
-    4. Backend generates JWT if match=true, returns 401 if match=false
-    
-    **Security**:
-    - Match threshold τ is app.matching.MATCH_THRESHOLD (the only one in the system)
-    - Returns 400 if no face or multiple faces detected
-    
-    Args:
-        file: Live image file from login attempt
-        saved_vector: JSON string of the 512D vector from database
-        
-    Returns:
-        VerifyResponse with match status and confidence score
-        
-    Raises:
-        HTTPException 400: If face detection fails or invalid saved_vector
-        HTTPException 500: If verification fails unexpectedly
+    Build a protected template from ENROLMENT_PHOTOS photos of one person.
+
+    Each photo must contain exactly one face, and every photo must match the averaged template
+    under τ (so one template can't mix people). Returns 400 with the failing photo's number.
     """
+    if len(files) != ENROLMENT_PHOTOS:
+        raise HTTPException(status_code=400, detail=f"Enrolment needs exactly {ENROLMENT_PHOTOS} photos, got {len(files)}")
     try:
-        # Read image bytes
-        image_bytes = await file.read()
-        
-        if len(image_bytes) == 0:
-            raise HTTPException(status_code=400, detail="Empty file uploaded")
-        
-        # Parse saved_vector from JSON string
+        vectors = [_embed(await _read_image(f, f"Photo {i}"), f"Photo {i}") for i, f in enumerate(files, start=1)]
         try:
-            saved_vector_list = json.loads(saved_vector)
-            
-            if not isinstance(saved_vector_list, list):
-                raise ValueError("saved_vector must be a list")
-            
-            if len(saved_vector_list) != 512:
-                raise ValueError(f"saved_vector must have 512 dimensions, got {len(saved_vector_list)}")
-            
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid JSON format for saved_vector")
+            template = protect(enrolment_template(vectors), ENROL_TEMPLATE_VERSION)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
-        
-        # Perform verification
-        is_match, confidence = face_engine.verify_match(
-            current_image_bytes=image_bytes,
-            saved_vector=saved_vector_list,
+        logger.info("Enrolled a protected template")
+        return EnrollResponse(
+            digest=base64.b64encode(template.digest).decode(),
+            helper=base64.b64encode(template.helper).decode(),
+            version=template.version,
         )
-        
-        logger.info(f"Verification complete: match={is_match}, confidence={confidence:.4f}")
-        
-        return VerifyResponse(match=is_match, confidence=confidence)
-    
-    except ValueError as e:
-        # Face detection errors
-        error_msg = str(e)
-        logger.warning(f"Face detection error in verification: {error_msg}")
-        raise HTTPException(status_code=400, detail=error_msg)
-    
     except HTTPException:
-        # Re-raise HTTP exceptions
         raise
-    
     except Exception as e:
-        # Unexpected errors
-        logger.error(f"Unexpected error in /verify_user: {str(e)}", exc_info=True)
+        logger.error(f"Unexpected error in /enroll: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error during enrolment")
+
+
+@app.post("/verify", response_model=VerifyResponse, dependencies=[Depends(require_gateway_key)])
+async def verify_face(
+    file: UploadFile = File(...),
+    helper: UploadFile = File(..., description="The stored P, raw bytes"),
+    digest: str = Form(..., description="The stored digest, base64"),
+    version: int = Form(..., description="The stored template version"),
+):
+    """
+    1:1: does this live photo match the one protected template the gateway looked up?
+    The decision (and α) lives in app.protection.
+    """
+    try:
+        try:
+            template = ProtectedTemplate(base64.b64decode(digest, validate=True), await helper.read(), version)
+        except binascii.Error:
+            raise HTTPException(status_code=400, detail="Malformed protected template")
+        probe = _embed(await _read_image(file, "Photo"), "Photo")
+        try:
+            match = verify(probe, template)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Malformed protected template")
+        logger.info(f"Verification complete: match={match}")
+        return VerifyResponse(match=match)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in /verify: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error during verification")
 
 

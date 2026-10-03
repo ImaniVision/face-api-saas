@@ -2,10 +2,48 @@ import {
   BadRequestException,
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
-import { ImageFilePipe } from './image-upload';
+import {
+  ENROLMENT_PHOTOS,
+  EnrolmentImagesPipe,
+  ImageFilePipe,
+} from './image-upload';
 
 const file = (bytes: number[] | Buffer) =>
   ({ buffer: Buffer.from(bytes) }) as Express.Multer.File;
+
+const jpeg = (n: number) => file([0xff, 0xd8, 0xff, 0xe0, n]);
+
+describe('EnrolmentImagesPipe', () => {
+  const pipe = new EnrolmentImagesPipe();
+  const photos = (n: number) => Array.from({ length: n }, (_, i) => jpeg(i));
+
+  it(`accepts exactly ${ENROLMENT_PHOTOS} distinct images`, () => {
+    expect(pipe.transform(photos(ENROLMENT_PHOTOS))).toHaveLength(
+      ENROLMENT_PHOTOS,
+    );
+  });
+
+  it('rejects too few, too many or none', () => {
+    for (const files of [
+      undefined,
+      [],
+      photos(ENROLMENT_PHOTOS - 1),
+      photos(ENROLMENT_PHOTOS + 1),
+    ]) {
+      expect(() => pipe.transform(files)).toThrow(BadRequestException);
+    }
+  });
+
+  it('rejects the same photo sent more than once', () => {
+    const files = [...photos(ENROLMENT_PHOTOS - 1), jpeg(0)];
+    expect(() => pipe.transform(files)).toThrow(/different captures/);
+  });
+
+  it('rejects a non-image among the photos', () => {
+    const files = [...photos(ENROLMENT_PHOTOS - 1), file(Buffer.from('%PDF'))];
+    expect(() => pipe.transform(files)).toThrow(UnsupportedMediaTypeException);
+  });
+});
 
 describe('ImageFilePipe', () => {
   const pipe = new ImageFilePipe();

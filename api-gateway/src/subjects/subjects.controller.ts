@@ -8,13 +8,19 @@ import {
   Put,
   Req,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { z } from 'zod';
 import { DeveloperAuthGuard } from '../auth/developer-auth.guard';
 import type { AuthedRequest } from '../auth/types';
-import { ImageFilePipe, ImageUpload } from '../common/image-upload';
+import {
+  EnrolmentImagesPipe,
+  EnrolmentUpload,
+  ImageFilePipe,
+  ImageUpload,
+} from '../common/image-upload';
 import { ZodPipe } from '../common/zod.pipe';
 import { RateLimitGuard } from '../rate-limit/rate-limit.guard';
 import { UsageInterceptor } from '../usage/usage.interceptor';
@@ -42,16 +48,19 @@ const enrollBody = z.object({
 export class SubjectsController {
   constructor(private readonly subjects: SubjectsService) {}
 
-  /** Enroll (or re-enroll) a person. Requires consent; the consent record is timestamped. */
+  /**
+   * Enroll (or re-enroll) a person from ENROLMENT_PHOTOS different photos (`images`, repeated).
+   * Requires consent; the consent record is timestamped.
+   */
   @Put(':externalId')
-  @UseInterceptors(ImageUpload())
+  @UseInterceptors(EnrolmentUpload())
   enroll(
     @Req() req: AuthedRequest,
     @Param('externalId', externalIdPipe) externalId: string,
     @Body(new ZodPipe(enrollBody)) body: z.infer<typeof enrollBody>,
-    @UploadedFile(ImageFilePipe) image: Buffer,
+    @UploadedFiles(EnrolmentImagesPipe) images: Buffer[],
   ) {
-    return this.subjects.enroll(req.user.sub, externalId, image, {
+    return this.subjects.enroll(req.user.sub, externalId, images, {
       method: req.apiKeyId ? 'api' : 'portal',
       reference: body.consent_reference,
     });
