@@ -42,11 +42,16 @@ class FaceEngine:
             )
             
             # Initialize InsightFace for embedding generation
+            # Only detection + recognition: buffalo_l's landmark and gender/age models don't affect the
+            # embedding (verified identical) but cost ~60 ms p50 / ~200 ms p95 per image on CPU.
             self.face_analyzer = FaceAnalysis(
                 name='buffalo_l',  # High-quality model
+                allowed_modules=['detection', 'recognition'],
                 providers=['CPUExecutionProvider']  # Use GPU if available: ['CUDAExecutionProvider', 'CPUExecutionProvider']
             )
-            self.face_analyzer.prepare(ctx_id=0, det_size=(640, 640))
+            # 320x320 detection: 45 ms vs 189 ms at 640 on CPU. Re-validated on LFW before adopting
+            # (FRR 2.1% vs 2.2%, 0 false accepts in 155k): spikes/ironmask/RESULTS.md.
+            self.face_analyzer.prepare(ctx_id=0, det_size=(320, 320))
             
             FaceEngine._initialized = True
             logger.info("FaceEngine initialized successfully!")
