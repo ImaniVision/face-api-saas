@@ -100,3 +100,21 @@ export const apiUsage = pgTable(
   },
   (t) => [index('api_usage_user_created_idx').on(t.userId, t.createdAt)],
 );
+
+// Approved payments only: the history the risk engine reads to spot a new payee or device.
+// Payee and device are the developer's own strings, kept only as SHA-256 hashes.
+export const transactions = pgTable(
+  'transactions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    subjectId: uuid('subject_id')
+      .references(() => subjects.id, { onDelete: 'cascade' })
+      .notNull(),
+    amount: integer('amount').notNull(),
+    payeeHash: bytea('payee_hash').notNull(),
+    deviceHash: bytea('device_hash').notNull(),
+    faceVerified: boolean('face_verified').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [index('transactions_subject_idx').on(t.subjectId)],
+);

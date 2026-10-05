@@ -82,8 +82,10 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
 
 **Goal:** demonstrate *continuous / risk-based* verification cheaply, with no ML risk.
 
-- [ ] Rules layer in front of the (mock) transaction API deciding when to require a face check.
-- [ ] At least one demonstrable rule (e.g. "new payee → require face", "amount over X → require face").
+- [x] Rules layer in front of the (mock) transaction API deciding when to require a face check.
+  → `POST /v1/subjects/:id/transactions` (`api-gateway/src/transactions/`). Pure rules in `risk.rules.ts`; the selfie is verified 1:1 in the same request as the payment, so a match can't be replayed onto another payment. Only approved payments are stored (payee/device as SHA-256), deleted with the subject.
+- [x] At least one demonstrable rule (e.g. "new payee → require face", "amount over X → require face").
+  → Three: amount ≥ 1,000.00, new payee, new device. Shown in the portal Live Test "3. Pay" step and docs page `/docs/payments`. Tests: 9 unit (rules at/below/above the limit, the four outcomes), 14 end-to-end checks in `spikes/ironmask/e2e_gateway.mjs` (each rule fires, impostor declined, genuine approved, history hashed and deleted).
 
 **Done when:** a rule demonstrably triggers a verification in the demo.
 

@@ -66,6 +66,12 @@ export default function PrivacyPage() {
           <code>customer-42</code>), the consent record (when it was given, how it was collected,
           and an optional reference the developer supplies) and when the person was enrolled.
         </p>
+        <p>
+          If the developer uses the risk-checked payments API, we also keep each approved payment:
+          the amount, the time, whether a face was checked, and SHA-256 hashes of the payee and
+          device IDs the developer sent. It is used only to tell whether a later payment is to a
+          new payee or from a new device, and it is deleted with the person.
+        </p>
 
         <h3>What we don&apos;t do</h3>
         <p>

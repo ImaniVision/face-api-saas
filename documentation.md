@@ -208,6 +208,9 @@ curl -X PUT http://localhost:3000/v1/subjects/customer-42 -H "x-api-key: $KEY" -
   -F "images=@1.jpg" -F "images=@2.jpg" -F "images=@3.jpg" -F "images=@4.jpg" -F "images=@5.jpg"
 # 1:1 verify a new photo against that person -> {"match": true}
 curl -X POST http://localhost:3000/v1/subjects/customer-42/verify -H "x-api-key: $KEY" -F "image=@new.jpg"
+# Mock payment behind the risk engine -> {"status":"face_required","reasons":["new_payee","new_device"]}
+# (resend with -F "image=@selfie.jpg" to confirm it; known payee + device + small amount -> approved, no face)
+curl -X POST http://localhost:3000/v1/subjects/customer-42/transactions -H "x-api-key: $KEY"   -F "amount=5000" -F "payee=acct-889" -F "device_id=phone-1"
 # Right to be forgotten
 curl -X DELETE http://localhost:3000/v1/subjects/customer-42 -H "x-api-key: $KEY"
 ```
@@ -399,7 +402,8 @@ All anonymous auth routes are rate limited per IP (5 burst, then 1 per 12 s).
 |-------|---------|
 | `PUT /v1/subjects/:externalId` | Enroll or re-enroll a person. Multipart: exactly 5 different photos as repeated `images` + `consent=true` (+ optional `consent_reference`). Records a timestamped consent row and stores a protected template. 400 names any photo with no/several faces, or that doesn't match the others. |
 | `POST /v1/subjects/:externalId/verify` | 1:1 verify `image` against that person → `{ match }`. 404 if never enrolled; **409 if enrolled before M2** (must re-enroll with 5 photos). |
-| `DELETE /v1/subjects/:externalId` | Delete the person, their template and consent records |
+| `POST /v1/subjects/:externalId/transactions` | M3 mock payment behind the risk engine (`src/transactions/`). Multipart: `amount` (integer minor units), `payee`, `device_id`, optional `image`. Rules (`risk.rules.ts`): amount ≥ 100000, new payee, new device → `{status:"face_required", reasons}`; resent with a selfie it is verified 1:1 in the same request → `approved` or `declined`. No rule → `approved` without a face. Only approved payments are stored (amount, `face_verified`, SHA-256 of payee and device); that history defines "new". |
+| `DELETE /v1/subjects/:externalId` | Delete the person, their template, consent records and payment history |
 
 `externalId` is the developer's own id for the person (1–128 of `A-Z a-z 0-9 _ . @ : -`). Images: JPEG/PNG/WebP (checked by content), max 5 MB. Responses carry `X-RateLimit-Limit/Remaining/Reset`; 429s carry `Retry-After`.
 
@@ -549,6 +553,7 @@ Environment variables are listed in [A2](#a2-first-time-setup-secrets).
 | Image validation (type by content, 5 MB) | Done (M1) |
 | Email verification before keys / `/v1` | Done (M1) |
 | Enrolled faces scoped per developer (`/v1/subjects`) | Done (M1) |
+| Risk engine: rules decide when a payment needs a face (amount, new payee, new device) | Done (M3) — mock payment API + Live Test "Pay" step |
 
 ---
 
@@ -610,7 +615,7 @@ Global CORS is now locked to the portal (M0), but there are no "publishable keys
 
 ## 7. What Needs to Be Built Next
 
-Follow `IMANI_BUILD_PLAN.md`. M0, M1 and M2 (cancelable biometrics) are built; next is **M3 — risk engine**.
+Follow `IMANI_BUILD_PLAN.md`. M0–M3 are built (M3: the risk engine in front of a mock payment API); next is **M4 — presentation package**.
 
 Upgrading a database created before M2: run `db/m2-protected-templates.sql` once, before `npx drizzle-kit push`. It deletes the unprotected embeddings (they can't be converted) and keeps subjects, who then get 409 until re-enrolled with 5 photos. It also deletes password-less face-login demo accounts, which would otherwise be locked out.
 

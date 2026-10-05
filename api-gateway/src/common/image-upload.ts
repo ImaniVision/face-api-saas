@@ -55,6 +55,19 @@ export class ImageFilePipe implements PipeTransform<
   }
 }
 
+/** As ImageFilePipe, but the `image` may be left out. */
+@Injectable()
+export class OptionalImageFilePipe implements PipeTransform<
+  Express.Multer.File | undefined,
+  Buffer | undefined
+> {
+  private readonly single = new ImageFilePipe();
+
+  transform(file: Express.Multer.File | undefined): Buffer | undefined {
+    return file ? this.single.transform(file) : undefined;
+  }
+}
+
 @Injectable()
 export class EnrolmentImagesPipe implements PipeTransform<
   Express.Multer.File[] | undefined,

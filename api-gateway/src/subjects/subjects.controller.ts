@@ -26,7 +26,7 @@ import { RateLimitGuard } from '../rate-limit/rate-limit.guard';
 import { UsageInterceptor } from '../usage/usage.interceptor';
 import { SubjectsService } from './subjects.service';
 
-const externalIdPipe = new ZodPipe(
+export const externalIdPipe = new ZodPipe(
   z
     .string()
     .regex(

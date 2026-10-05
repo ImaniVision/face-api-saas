@@ -1,6 +1,7 @@
 // End-to-end M2 check through the real gateway (host :3000), ML service and Postgres.
 // sign up -> verify email (Mailpit) -> API key -> 5-photo enrol (+ the error cases) -> verify
-// genuine/impostor with client-side latency -> pre-M2 subject gets 409 -> re-enrol -> delete -> 404.
+// genuine/impostor with client-side latency -> pre-M2 subject gets 409 -> re-enrol ->
+// M3 risk-engine payments (each rule triggers a face check) -> delete -> 404.
 // Creates a throwaway developer account and deletes it at the end.
 //
 // Run from the repo root with `npm run dev:infra` up and the gateway on :3000:
@@ -161,10 +162,43 @@ check('re-enrol with 5 photos', r.status === 200);
 r = await call('POST', `${subject}/verify`, { key, form: verifyForm(GENUINE[1]) });
 check('verify works after re-enrolment', r.status === 200 && r.body.match === true);
 
+// --- M3: risk engine in front of the mock payment API ---------------------------------------
+const pay = (fields, image) => {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(fields)) form.append(k, String(v));
+  if (image) form.append('image', blob(image), 'selfie.jpg');
+  return call('POST', `${subject}/transactions`, { key, form });
+};
+const usual = { amount: 5000, payee: 'Ama Mensah', device_id: 'phone-1' };
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+r = await pay(usual);
+check('first payment asks for a face (new payee + new device)', r.body?.status === 'face_required' && same(r.body.reasons, ['new_payee', 'new_device']), JSON.stringify(r.body));
+r = await pay(usual, IMPOSTORS[0]);
+check('impostor selfie declines the payment', r.body?.status === 'declined', r.body?.status);
+r = await pay(usual);
+check('declined payment does not make the payee known', r.body?.status === 'face_required');
+r = await pay(usual, GENUINE[2]);
+check('genuine selfie approves it', r.body?.status === 'approved' && r.body.faceVerified === true, r.body?.status);
+r = await pay(usual);
+check('repeat payment: no face check', r.body?.status === 'approved' && r.body.faceVerified === false && same(r.body.reasons, []));
+r = await pay({ ...usual, amount: 100000 });
+check('amount at 1,000.00 asks for a face', r.body?.status === 'face_required' && same(r.body.reasons, ['amount_over_limit']));
+r = await pay({ ...usual, payee: 'Kofi Boateng' });
+check('new payee asks for a face', same(r.body?.reasons, ['new_payee']));
+r = await pay({ ...usual, device_id: 'laptop-2' });
+check('new device asks for a face', same(r.body?.reasons, ['new_device']));
+r = await pay({ ...usual, amount: 0 });
+check('invalid amount rejected (400)', r.status === 400, r.body?.message);
+const plain = psql("select count(*) from transactions where encode(payee_hash, 'escape') like '%Ama%'");
+const rows = psql("select count(*) from transactions t join subjects s on s.id = t.subject_id where s.external_id='m2-e2e-alice'");
+check('only approved payments stored, payee hashed', rows === '2' && plain === '0', `${rows} rows`);
+
 // --- deletion ------------------------------------------------------------------------------
 check('delete subject (204)', (await call('DELETE', subject, { key })).status === 204);
 r = await call('POST', `${subject}/verify`, { key, form: verifyForm(GENUINE[0]) });
 check('deleted subject gets 404', r.status === 404);
+check('payment history deleted with the subject', psql("select count(*) from transactions t join subjects s on s.id = t.subject_id where s.external_id='m2-e2e-alice'") === '0');
 check('delete test account (204)', (await call('DELETE', '/auth/me', { token: jwt })).status === 204);
 
 const failed = results.filter((x) => !x.ok);

@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
 import { SubjectsModule } from './subjects/subjects.module';
+import { TransactionsModule } from './transactions/transactions.module';
 import { UsageModule } from './usage/usage.module';
 
 @Module({
@@ -26,6 +27,7 @@ import { UsageModule } from './usage/usage.module';
     AuthModule,
     ApiKeysModule,
     SubjectsModule,
+    TransactionsModule,
     UsageModule,
   ],
   controllers: [AppController],

@@ -44,6 +44,11 @@ export default function DocsLayout({
                                     Verification
                                 </Button>
                             </Link>
+                            <Link href="/docs/payments">
+                                <Button variant="ghost" size="sm" className="w-full justify-start">
+                                    Risk-checked payments
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                     <div className="mt-8 px-2">

@@ -48,7 +48,7 @@ export function CameraPermissionModal({
           </div>
           <DialogDescription className="text-base text-muted-foreground/90 leading-relaxed">
             The Live Test takes photos with your camera. Nothing leaves your
-            browser until you press Enroll or Verify.
+            browser until you press Enroll, Verify or confirm a payment.
             <br />
             <br />
             <span className="font-medium text-foreground">
@@ -77,7 +77,7 @@ export function CameraPermissionModal({
                 className="text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
                 I understand my photos are sent to Imani Vision when I press
-                Enroll or Verify.
+                Enroll, Verify or confirm a payment.
               </label>
             </div>
           </div>
