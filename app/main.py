@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from app.engine import face_engine
-from app.protection import ENROLMENT_PHOTOS, FP32, HELPER_BYTES, ProtectedTemplate, enrolment_template, protect, verify
+from app.protection import ENROLMENT_PHOTOS, HELPER_BYTES, INT8, ProtectedTemplate, enrolment_template, protect, verify
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,9 +28,9 @@ ML_SERVICE_API_KEY = os.environ.get("ML_SERVICE_API_KEY", "")
 if not ML_SERVICE_API_KEY:
     raise RuntimeError("ML_SERVICE_API_KEY is not set; the ML service will not start without gateway auth")
 
-# Format new templates are written in (1 = fp32, the validated production format; 2 = int8 candidate).
-# Verification reads every known format, so old and new templates coexist during a migration.
-ENROL_TEMPLATE_VERSION = int(os.environ.get("ENROL_TEMPLATE_VERSION", str(FP32)))
+# Format new templates are written in (2 = int8, production; 1 = fp32, still readable).
+# Verification reads every known format, so old and new templates coexist without a migration.
+ENROL_TEMPLATE_VERSION = int(os.environ.get("ENROL_TEMPLATE_VERSION", str(INT8)))
 if ENROL_TEMPLATE_VERSION not in HELPER_BYTES:
     raise RuntimeError(f"ENROL_TEMPLATE_VERSION must be one of {sorted(HELPER_BYTES)}")
 

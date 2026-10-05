@@ -60,19 +60,21 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
   - equal-error-rate (EER) degradation vs. unprotected matching, and
   - retrieval accuracy + query latency at increasing template counts.
   - **This spike decides the architecture. Report the numbers either way — a negative result is a valid thesis finding.**
-- [~] If viable: integrate protected templates as the real storage path (replaces raw-embedding storage — this is why we didn't gold-plate that earlier).
+- [x] If viable: integrate protected templates as the real storage path (replaces raw-embedding storage — this is why we didn't gold-plate that earlier).
   → Viable at α=12 with 5 enrolment photos. Built: `app/protection.py`, `/enroll` + `/verify`, `bytea` templates, 5-photo enrolment API + portal demo, 409 re-enrolment, `db/m2-protected-templates.sql`. Unit tests + production-path LFW re-check pass. E2E through the gateway: 18/19 pass. Verify latency 250 ms median (meets < 300 ms) / 318 ms p95 (misses by 18 ms on laptop CPU; accuracy not traded for it). Storage spike done (not applied): int8-quantised P is 4x smaller (263 KB, 0.27 TB per 1M users) with no measurable accuracy change and the same 2^91; embedding-dimension reduction fails. See RESULTS.md "Storage spike".
 - [x] Fix the RGB/BGR channel bug in `app/engine.py` (separate PR, lands before the IronMask integration).
 - [x] Produce a results table (EER cost, retrieval %, latency) for the report/slides.
 - **M2 follow-ups**
   - [x] Template versioning: `biometrics.template_version` (1 = fp32, 2 = int8). Both readable; new enrolments write `ENROL_TEMPLATE_VERSION` (default 1).
-  - [~] Validate int8 storage. **Accuracy + security: passed** (paired vs fp32, 5 seeds, 14.2M impostors, identical impostor decisions, FRR 2.00% vs 2.00%, 2^91 holds). **E2E latency: inconclusive** (host CPU was saturated by an unrelated process), re-run on an idle machine. Production stays fp32.
+  - [x] int8 storage validated and **adopted as production** (template v2): identical impostor decisions on 14.2M attempts, FRR 2.00% vs 2.00%, 2^91 holds, 4x smaller, gateway p50/p95/p99 229/273/313 ms vs fp32 250/297/382 ms.
   - [x] `examples/` rewritten for the 5-photo flow (server client + Express routes + React), strict type-checked.
   - [~] Privacy policy draft at `/privacy` + one-time UI privacy notice. Before launch: operator legal name, contact address, hosting/email providers, legal review.
   - [~] Terms of service draft at `/terms`, marked not in force. Same launch inputs as the privacy policy: legal name, contact, governing law, providers, legal review.
-  - [ ] Split `app/engine.py` into 3 PRs with `git add -p`: (1) BGR fix, (2) IronMask integration / old matching removed, (3) two-model + 320x320 latency.
+  - [x] Split into PRs: `fix/bgr-channel-order`, `m2/ironmask-integration`, `perf/ml-detection-speed`, `docs/m2-results-portal-legal`, `perf/int8-templates` (stacked, local).
 
 **Done when:** enrolled faces match correctly through protected templates, AND you have a measured table of the accuracy/latency cost. *(If only the project reaches here, it's already a strong final-year project.)*
+
+> **M2 done; baseline frozen** (git tag `m2-baseline`). Numbers: `spikes/ironmask/RESULTS.md`, section "M2 baseline".
 
 ---
 

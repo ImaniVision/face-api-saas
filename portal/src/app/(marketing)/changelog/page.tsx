@@ -2,6 +2,13 @@ import { Badge } from "@/components/ui/badge";
 
 const changelogEntries = [
   {
+    date: "October 5, 2026",
+    tag: "Performance",
+    title: "Templates are 4x smaller",
+    description:
+      "Each protected template now stores its rotation matrix at 8-bit precision: 257 KiB per person instead of 1 MiB. On 14.2 million impostor attempts the smaller format made exactly the same decisions as before, and the security estimate is unchanged. Verification got faster too: 229 ms instead of 250 ms at the median, 273 ms instead of 297 ms at the 95th percentile. Existing templates keep working.",
+  },
+  {
     date: "October 3, 2026",
     tag: "Security",
     title: "Protected face templates",

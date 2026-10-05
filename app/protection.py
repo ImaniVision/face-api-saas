@@ -11,8 +11,9 @@ FIDO accuracy bar (FRR ≤ 5% at FAR ≤ 1e-4, 80% CI upper bound 2.6%) and reco
 stolen (digest, P) takes ~2^91 guesses. Raising α buys security but loses accuracy fast.
 
 P is stored in a versioned format so formats can coexist during a migration:
-  version 1 (FP32): float32, 1 MiB. The validated production format.
-  version 2 (INT8): per-row fp16 scale + int8, 257 KiB. Candidate (storage spike in RESULTS.md).
+  version 1 (FP32): float32, 1 MiB. Written before int8 was adopted; still read.
+  version 2 (INT8): per-row fp16 scale + int8, 257 KiB. The production format (RESULTS.md: same
+                    decisions as fp32 on 14.2M impostor attempts, 4x smaller, ~21 ms faster p50).
 Both are functions of P alone, so neither weakens the 2^91 estimate; only accuracy can differ.
 """
 

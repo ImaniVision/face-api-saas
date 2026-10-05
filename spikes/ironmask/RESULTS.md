@@ -122,7 +122,7 @@ Latency root cause (profiled inside the ML service): IronMask verify is 6 ms. In
 
 ## Storage spike: can the 1 MiB template shrink?
 
-**Not applied to production.** The production template is still fp32, 1 MiB. Baseline = production as it runs now (320x320 detection, α=12, 5 photos). Same LFW protocol for every variant (310 people through the production consistency gate, 3,846 genuine and 155,000 impostor attempts). Scripts: `storage_spike.py`, `storage_db_latency.py`.
+**Superseded:** int8 was later validated and adopted (see "int8 validation" and "M2 baseline"). At the time of this spike, production was fp32, 1 MiB. Baseline = production as it runs now (320x320 detection, α=12, 5 photos). Same LFW protocol for every variant (310 people through the production consistency gate, 3,846 genuine and 155,000 impostor attempts). Scripts: `storage_spike.py`, `storage_db_latency.py`.
 
 | Variant | Bytes / template | False rejects (80% CI) | False accepts | Security | Verify compute p50 / p95 | DB fetch p50 / p95 | TB per 1M users |
 |---|---|---|---|---|---|---|---|
@@ -151,7 +151,7 @@ Latency root cause (profiled inside the ML service): IronMask verify is 6 ms. In
 
 ## int8 validation (paired against fp32)
 
-**Production still writes fp32.** Templates are now versioned (`biometrics.template_version`: 1 = fp32, 2 = int8). The ML service reads both and writes `ENROL_TEMPLATE_VERSION` (default 1). Script: `int8_validation.py`.
+Templates are versioned (`biometrics.template_version`: 1 = fp32, 2 = int8). The ML service reads both and writes `ENROL_TEMPLATE_VERSION` (default 1). Script: `int8_validation.py`.
 
 **Design.** For each of the 310 people (320x320 production pipeline) and each of **5 seeds**, one secret codeword and one random rotation P are drawn with the production code, and P is stored **both ways**. fp32 and int8 therefore see the same codeword, the same P and the same probes, so any decision that differs is caused by int8 alone. Impostors are **every photo of every other person**: 14,177,225 attempts, 90x the earlier set.
 
@@ -170,9 +170,38 @@ Latency root cause (profiled inside the ML service): IronMask verify is 6 ms. In
 
 **Security under the real int8 bytes.** The codebook is the production one: C(512, 12)·2¹² = 2⁹¹·⁰. The int8 helper is computed from P alone (P → per-row fp16 scale + int8), so it can't reveal anything P doesn't, and finding the codeword still means searching that codebook against its hash. Two empirical checks on real int8 templates found nothing: 100,000 random-probe attacks produced 0 digest matches, and the stored per-row scales don't distinguish the codeword's support rows from the others (mean AUC 0.49; 0.5 is chance).
 
-**End-to-end latency: inconclusive, not measured cleanly.** Both formats passed every functional end-to-end check. An int8 run stored a 263,168-byte template, matched 40/40 genuine photos and accepted no impostors. But during these runs the host CPU was at 100% even when idle, with a process not started by this work using about 1.5 cores. The same fp32 configuration that measured 250 / 318 ms earlier measured 296 / 430 ms, and an int8 run measured 379 / 1,420 ms, a tail that int8's +3 ms of compute can't explain. **The latency question (does 257 KiB close the 18 ms p95 gap?) needs a re-run on an idle machine.** The expected effect from the component measurements is about 8 ms less DB fetch (p50) plus a smaller gateway-to-ML transfer, minus about 3 ms more compute.
+**Verdict on int8: adopted as the production format** after the clean benchmark below. It meets the accuracy and security bar exactly as fp32 does (paired evidence over 5 seeds and 14.2M impostors), at a quarter of the storage (1.09 → 0.27 TB per million users), and it is faster end to end. Existing fp32 templates keep working; no migration.
 
-**Verdict on int8.** It meets the accuracy and security bar as well as fp32 does, with paired evidence over 5 seeds and 14.2M impostors, at a quarter of the storage (1.09 → 0.27 TB per million users). The latency benefit is unconfirmed. Production stays on fp32 until a clean latency run and a decision to switch. Switching is then a configuration change (`ENROL_TEMPLATE_VERSION=2`) with no database migration: existing fp32 templates keep working, and they're replaced as people re-enroll.
+## Final latency benchmark: fp32 vs int8 (clean CPU)
+
+The first attempt was invalid: the host was at 100% CPU because of an unrelated process (later found to be malware and removed). Re-run after removal and a reboot, with the browser closed. Host load stayed at 15–22% average before and after each run (other background apps). Laptop: Intel i5-9300H (4 cores / 8 threads), Docker Desktop.
+
+Design: one enrolment, one codeword, one P, stored as fp32 and as int8 (`bench_ml.py`, `bench_gateway.mjs`). Requests alternate formats (and which goes first) sequentially, after 20 warm-up pairs. In the gateway run each format has its own API key, so the per-key rate limit can't throttle either side. All 1,600 measured verifications returned `match: true`.
+
+| Layer (400 requests per format) | Format | Mean | p50 | p95 | p99 | Max |
+|---|---|---|---|---|---|---|
+| ML service `/verify` | fp32 | 242.4 | 238.8 | 275.4 | 307.7 | 610.0 |
+| ML service `/verify` | int8 | 238.6 | 236.3 | 270.3 | 283.6 | 376.0 |
+| **Gateway end to end** | fp32 | 249.8 | 249.9 | 297.1 | 381.9 | 457.5 |
+| **Gateway end to end** | **int8** | **226.5** | **229.2** | **273.3** | **312.5** | 381.5 |
+
+(ms.) At the ML service int8 saves only 2–5 ms: the extra dequantisation offsets the smaller upload. End to end it saves 21 ms p50, 24 ms p95 and 69 ms p99. The difference is in the gateway path: fetching a 1 MiB `bytea` from Postgres (node-postgres decodes ~2 MB of hex text) and forwarding it to the ML service. **With int8, gateway p95 is 273 ms, inside the 300 ms target.** fp32 sits at 297 ms on a clean CPU, so the earlier 318 ms p95 "gap" came from background load, not the code. A final 19/19 e2e run with the int8 default measured 185 / 211 ms (40 samples, paced 1/s).
+
+## M2 baseline (frozen)
+
+This is the configuration M2 delivers and every later milestone is compared against. Git tag `m2-baseline`.
+
+| | |
+|---|---|
+| Matching | 1:1 only. Identity is claimed first; one template is compared. |
+| Face pipeline | MediaPipe single-face gate → InsightFace `buffalo_l` (detection + recognition only), BGR input, 320x320 detection, 512-d L2-normalised embedding |
+| Enrolment | 5 different photos, averaged; every photo must match the mean at cosine ≥ τ = 0.6 |
+| Protection | IronMask, α = 12 (codebook C(512,12)·2¹² = 2⁹¹); stored: SHA-256 digest (32 B) + P |
+| Template format | Version 2, int8 with a per-row fp16 scale: 263,168 B per person (0.27 TB per million). Version 1 (fp32, 1 MiB) still readable |
+| Accuracy (LFW, 310 people x 5 seeds, int8) | False rejects 2.00% (80% CI 1.59–2.54%); false accepts 0 real in 14,177,215 (10 raw: one 2-face photo production rejects, one mislabelled photo); failure to enrol 0.3% |
+| FIDO accuracy bar (FRR ≤ 5% at FAR ≤ 10⁻⁴) | Met, on an offline benchmark (not a certification) |
+| Latency (gateway end to end, laptop CPU) | p50 229 ms, p95 273 ms, p99 313 ms |
+| Not covered | Liveness / spoofing, demographic fairness testing, non-LFW datasets, live-capture accuracy, server hardware, multi-request concurrency |
 
 ## Latency and storage (Postgres, 1:1 lookup by primary key, α=16)
 

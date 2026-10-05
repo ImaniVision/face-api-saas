@@ -16,7 +16,7 @@ const faqs = [
   {
     question: "What do you store about a face?",
     answer:
-      "Per person, a 32-byte hash and a 1 MiB random rotation matrix (the IronMask scheme). The face embedding is computed inside our ML service, used once and discarded, and photos are never saved. Getting the embedding back from a stolen record takes about 2^91 guesses. Re-enrolling someone issues a new record that can't be linked to the old one.",
+      "Per person, a 32-byte hash and a 257 KiB random rotation matrix (the IronMask scheme). The face embedding is computed inside our ML service, used once and discarded, and photos are never saved. Getting the embedding back from a stolen record takes about 2^91 guesses. Re-enrolling someone issues a new record that can't be linked to the old one.",
   },
   {
     question: "How accurate is it?",

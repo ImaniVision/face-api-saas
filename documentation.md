@@ -330,7 +330,7 @@ The embedding is L2-normalized, so all vectors have a magnitude of 1 and cosine 
 
 **`protection.py` — cancelable templates (M2)**
 
-Templates are versioned (`biometrics.template_version`): **1 = fp32** (1 MiB, the validated production format) and **2 = int8** (257 KiB, candidate). Verification reads both, so formats can coexist during a migration; `ENROL_TEMPLATE_VERSION` (default `1`) picks the format new enrolments are written in.
+Templates are versioned (`biometrics.template_version`): **2 = int8** (257 KiB, the production format) and **1 = fp32** (1 MiB, written before int8 was adopted). Verification reads both, so old fp32 templates keep working with no migration; `ENROL_TEMPLATE_VERSION` (default `2`) picks the format new enrolments are written in.
 
 Raw embeddings never leave the ML service and are never stored. Enrolment averages **5** photos into one template, then protects it with **IronMask** (α = 12): a secret random codeword `c` and a random orthogonal matrix `P` with `P·t = c`. Only `sha256(c)` (32 bytes) and `P` (1 MiB) are stored; neither reveals the face, and recovering it from a stolen pair takes ~2⁹¹ guesses. Verification decodes `P·t′` to the nearest codeword and compares hashes. α lives only here; τ (`matching.py`) now only gates enrolment: every one of the 5 photos must match their average, so one template can't mix people. Evidence and the accuracy/security trade-off: `spikes/ironmask/RESULTS.md`.
 
