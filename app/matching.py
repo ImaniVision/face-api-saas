@@ -1,13 +1,15 @@
 """
-The face-match decision. THE one place τ lives — the gateway never compares embeddings.
+τ: the cosine threshold on raw embeddings. THE one place it lives — the gateway never compares
+embeddings. Since M2, login decisions are made on protected templates (α in app.protection);
+τ gates enrolment, requiring every enrolment photo to match the averaged template.
 Kept free of model imports so it can be tested without loading the ML models.
 """
 
-from typing import Sequence, Tuple
+from typing import Sequence
 
 import numpy as np
 
-# τ: cosine similarity at or above this is a match. A false accept is unrecoverable
+# Cosine similarity at or above this counts as the same person. A false accept is unrecoverable
 # (you cannot reset a face), so raise it rather than lower it when in doubt.
 MATCH_THRESHOLD = 0.6
 
@@ -24,8 +26,3 @@ def cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
 
 def is_match(similarity: float) -> bool:
     return similarity >= MATCH_THRESHOLD
-
-
-def decide(saved: Sequence[float], current: Sequence[float]) -> Tuple[bool, float]:
-    similarity = cosine_similarity(saved, current)
-    return is_match(similarity), similarity

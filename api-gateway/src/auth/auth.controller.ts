@@ -6,6 +6,7 @@ import {
   HttpCode,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -13,7 +14,12 @@ import { z } from 'zod';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import type { AuthedRequest } from './types';
-import { ImageFilePipe, ImageUpload } from '../common/image-upload';
+import {
+  EnrolmentImagesPipe,
+  EnrolmentUpload,
+  ImageFilePipe,
+  ImageUpload,
+} from '../common/image-upload';
 import { ZodPipe } from '../common/zod.pipe';
 import { RateLimitGuard } from '../rate-limit/rate-limit.guard';
 
@@ -60,15 +66,15 @@ export class AuthController {
     return this.authService.emailLogin(body.email, body.password);
   }
 
-  /** Face-login demo of the API. Requires consent before any embedding is stored. */
+  /** Face-login demo of the API. Requires consent before any template is stored. */
   @Post('register')
   @UseGuards(RateLimitGuard)
-  @UseInterceptors(ImageUpload())
+  @UseInterceptors(EnrolmentUpload())
   register(
     @Body(new ZodPipe(faceRegister)) body: z.infer<typeof faceRegister>,
-    @UploadedFile(ImageFilePipe) image: Buffer,
+    @UploadedFiles(EnrolmentImagesPipe) images: Buffer[],
   ) {
-    return this.authService.register(body.email, image);
+    return this.authService.register(body.email, images);
   }
 
   @Post('login')

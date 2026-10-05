@@ -7,10 +7,8 @@ import cv2
 import numpy as np
 import mediapipe as mp
 from insightface.app import FaceAnalysis
-from typing import Optional, Tuple, List
+from typing import List
 import logging
-
-from app.matching import MATCH_THRESHOLD, decide
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -123,23 +121,6 @@ class FaceEngine:
         
         # Convert to list for JSON serialization
         return embedding.tolist()
-    
-    def verify_match(
-        self,
-        current_image_bytes: bytes,
-        saved_vector: List[float],
-    ) -> Tuple[bool, float]:
-        """
-        Verify a live image against a saved embedding. The decision (and τ) lives in
-        app.matching — this only produces the live embedding.
-
-        Raises:
-            ValueError: If face detection/embedding fails
-        """
-        current_vector = self.image_to_vector(current_image_bytes)
-        is_match, similarity = decide(saved_vector, current_vector)
-        logger.info(f"Verification result: similarity={similarity:.4f}, threshold={MATCH_THRESHOLD}, match={is_match}")
-        return is_match, similarity
 
 
 # Global singleton instance

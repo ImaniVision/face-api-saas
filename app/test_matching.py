@@ -6,7 +6,7 @@ Run: python -m unittest app.test_matching   (needs only numpy)
 import math
 import unittest
 
-from app.matching import MATCH_THRESHOLD, cosine_similarity, decide, is_match
+from app.matching import MATCH_THRESHOLD, cosine_similarity, is_match
 
 EPS = 1e-6
 
@@ -28,6 +28,11 @@ class DecisionAtThreshold(unittest.TestCase):
 
     def test_just_below_tau_rejects(self):
         self.assertFalse(is_match(MATCH_THRESHOLD - EPS))
+
+
+def decide(saved: list, current: list) -> tuple:
+    similarity = cosine_similarity(saved, current)
+    return is_match(similarity), similarity
 
 
 class DecisionFromEmbeddings(unittest.TestCase):

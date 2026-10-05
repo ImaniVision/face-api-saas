@@ -4,13 +4,22 @@ import {
   PipeTransform,
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { createHash } from 'crypto';
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+// Mirrors ENROLMENT_PHOTOS in app/protection.py, which owns the template and re-checks the count.
+export const ENROLMENT_PHOTOS = 5;
 
 /** Multipart `image` field, capped at MAX_IMAGE_BYTES while streaming (413 beyond it). */
 export const ImageUpload = () =>
   FileInterceptor('image', { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } });
+
+/** Repeated multipart `images` field for enrolment: ENROLMENT_PHOTOS photos, each capped. */
+export const EnrolmentUpload = () =>
+  FilesInterceptor('images', ENROLMENT_PHOTOS, {
+    limits: { fileSize: MAX_IMAGE_BYTES, files: ENROLMENT_PHOTOS },
+  });
 
 // Sniff the bytes: the client-supplied mimetype and filename are not trustworthy.
 function isAllowedImage(buf: Buffer): boolean {
@@ -43,5 +52,32 @@ export class ImageFilePipe implements PipeTransform<
       );
     }
     return file.buffer;
+  }
+}
+
+@Injectable()
+export class EnrolmentImagesPipe implements PipeTransform<
+  Express.Multer.File[] | undefined,
+  Buffer[]
+> {
+  private readonly single = new ImageFilePipe();
+
+  transform(files: Express.Multer.File[] | undefined): Buffer[] {
+    if (files?.length !== ENROLMENT_PHOTOS) {
+      throw new BadRequestException(
+        `Enrolment needs exactly ${ENROLMENT_PHOTOS} \`images\` (got ${files?.length ?? 0})`,
+      );
+    }
+    const images = files.map((f) => this.single.transform(f));
+    // The same photo sent five times averages to nothing; that would quietly cost accuracy.
+    const hashes = images.map((b) =>
+      createHash('sha256').update(b).digest('hex'),
+    );
+    if (new Set(hashes).size !== images.length) {
+      throw new BadRequestException(
+        'Enrolment photos must be different captures, not copies of one photo',
+      );
+    }
+    return images;
   }
 }

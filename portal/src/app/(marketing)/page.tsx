@@ -17,7 +17,7 @@ const res = await fetch(
   },
 );
 
-const { match, confidence } = await res.json();`;
+const { match } = await res.json();`;
 
 export default function HomePage() {
   return (

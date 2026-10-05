@@ -16,6 +16,8 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       ML_SERVICE_API_KEY: ${ML_SERVICE_API_KEY:?set ML_SERVICE_API_KEY in .env}
+      # Format for NEW templates: 1 = fp32 (validated, default), 2 = int8 (candidate, see RESULTS.md).
+      ENROL_TEMPLATE_VERSION: ${ENROL_TEMPLATE_VERSION:-1}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
