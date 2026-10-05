@@ -154,7 +154,7 @@ cd portal
 npm run dev                 # portal on http://localhost:3001
 ```
 
-> The first start downloads the face model (~280 MB) and can take a few minutes. The ML service shows `(healthy)` in `docker ps` when ready.
+> The first build downloads the face model (~280 MB) into the image and can take a few minutes. After that, containers start offline in about 15 s; the ML service shows `(healthy)` in `docker ps` when ready.
 
 ## A4. Everyday commands
 
@@ -507,7 +507,7 @@ Type-checked in strict mode against the real `express`/`multer`/`react` types. N
 | `backend` | `face-gateway` | Built from `./api-gateway` | Port 3000 |
 
 - Every secret comes from the root `.env` via `${VAR:?...}` — Compose refuses to start if one is missing.
-- The ML health check allows 40 s start time for the model download on first run.
+- The face model is baked into the image at build time (downloaded as `mluser`, so it lands in the home the service reads). The ML health check allows 40 s start time.
 
 **`docker-compose.dev.yml`** — dev overlay (used by `npm run dev:infra`): publishes `ml` and `db` on `127.0.0.1` only and switches off the gateway container (you run it yourself). **Never use it on a server.**
 
