@@ -95,7 +95,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
 
 **Goal:** the demo proves the thesis's central claim on the day, no surprises.
 
-- [ ] End-to-end demo path rehearsed and working.
+- [~] End-to-end demo path rehearsed and working.
+  → Path, pre-flight checklist, timed script and failure playbook in `DEMO.md`. Working: `spikes/ironmask/e2e_gateway.mjs` 30/30 on AC power (2026-10-05). Rehearsal still to do (team).
 - [ ] Recorded fallback video of the live demo.
 - [ ] M2 results table in the slide deck.
 - [ ] Thesis final draft cites real artifacts (tests, numbers, endpoints) — not plans.
