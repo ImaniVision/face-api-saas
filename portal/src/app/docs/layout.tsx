@@ -12,7 +12,7 @@ export default function DocsLayout({
             <aside className="w-full border-r bg-muted/20 md:w-64 md:min-h-screen md:shrink-0">
                 <div className="flex h-16 items-center border-b px-6">
                     <Link href="/" className="text-xl font-bold tracking-tight">
-                        Haida <span className="text-sm font-normal text-muted-foreground">Docs</span>
+                        Imani Vision <span className="text-sm font-normal text-muted-foreground">Docs</span>
                     </Link>
                 </div>
                 <div className="p-4">
@@ -24,14 +24,9 @@ export default function DocsLayout({
                                     Introduction
                                 </Button>
                             </Link>
-                            <Link href="/docs/authentication">
-                                <Button variant="ghost" size="sm" className="w-full justify-start">
-                                    Authentication
-                                </Button>
-                            </Link>
                             <Link href="/docs/errors">
                                 <Button variant="ghost" size="sm" className="w-full justify-start">
-                                    Errors
+                                    Errors &amp; limits
                                 </Button>
                             </Link>
                         </div>
@@ -39,9 +34,9 @@ export default function DocsLayout({
                     <div className="mb-4">
                         <h4 className="mb-2 px-2 text-sm font-semibold tracking-tight">API Reference</h4>
                         <div className="space-y-1">
-                            <Link href="/docs/faces">
+                            <Link href="/docs/enrollment">
                                 <Button variant="ghost" size="sm" className="w-full justify-start">
-                                    Faces
+                                    Enrollment
                                 </Button>
                             </Link>
                             <Link href="/docs/verification">

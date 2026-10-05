@@ -87,7 +87,7 @@ export default function SignUpPage() {
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <Image
               src="/logo.svg"
-              alt="FaceAuth Logo"
+              alt="Imani Vision Logo"
               width={32}
               height={32}
               className="h-8 w-8"
@@ -97,7 +97,7 @@ export default function SignUpPage() {
             Create your account
           </h1>
           <p className="text-sm text-muted-foreground">
-            Get started with FaceAuth for free.
+            Get started with Imani Vision for free.
           </p>
         </div>
 
@@ -229,23 +229,14 @@ export default function SignUpPage() {
           </Link>
         </p>
 
-        {/* Terms */}
         <p className="text-center text-xs text-muted-foreground/70">
-          By signing up, you agree to our{" "}
-          <Link
-            href="/terms"
-            className="underline underline-offset-2 hover:text-muted-foreground"
-          >
-            Terms of Service
-          </Link>{" "}
-          and{" "}
+          We keep your email and a hashed password.{" "}
           <Link
             href="/privacy"
             className="underline underline-offset-2 hover:text-muted-foreground"
           >
-            Privacy Policy
+            Privacy policy
           </Link>
-          .
         </p>
       </div>
     </div>

@@ -195,7 +195,7 @@ docker ps                               # face-api should say (healthy)
 curl http://localhost:3000/             # gateway → "Hello World!"
 ```
 
-The full developer flow (**this stores a face embedding in your local database**):
+The full developer flow (**this stores a protected face template in your local database**):
 
 1. Sign up in the portal (http://localhost:3001/sign-up), open the email in Mailpit (http://localhost:8025) and click the link.
 2. Sign in, create an API key on **API Keys**.
@@ -203,10 +203,11 @@ The full developer flow (**this stores a face embedding in your local database**
 
 ```bash
 KEY=sk_live_...
-# Enroll a person under your own id for them. consent=true is mandatory.
-curl -X PUT http://localhost:3000/v1/subjects/customer-42 -H "x-api-key: $KEY" -F "consent=true" -F "image=@photo.jpg"
-# 1:1 verify a new photo against that person -> {"match": true, "confidence": 0.87}
-curl -X POST http://localhost:3000/v1/subjects/customer-42/verify -H "x-api-key: $KEY" -F "image=@photo2.jpg"
+# Enroll a person under your own id for them, from 5 different photos. consent=true is mandatory.
+curl -X PUT http://localhost:3000/v1/subjects/customer-42 -H "x-api-key: $KEY" -F "consent=true" \
+  -F "images=@1.jpg" -F "images=@2.jpg" -F "images=@3.jpg" -F "images=@4.jpg" -F "images=@5.jpg"
+# 1:1 verify a new photo against that person -> {"match": true}
+curl -X POST http://localhost:3000/v1/subjects/customer-42/verify -H "x-api-key: $KEY" -F "image=@new.jpg"
 # Right to be forgotten
 curl -X DELETE http://localhost:3000/v1/subjects/customer-42 -H "x-api-key: $KEY"
 ```
@@ -241,7 +242,7 @@ In **Option 2**, `http://localhost:8000` and `localhost:5432` are deliberately *
 Think of it as "Stripe for facial authentication." Developers sign up, generate API keys from the portal, and call endpoints that tell them whether two faces match. It is not a consumer product: our users are developers, and their customers are the people whose faces are verified.
 
 ### Core capabilities (as designed)
-- **Face Verification (1:1):** "Is this the same person as the one enrolled under this identity?" Returns a match result and a confidence score. Identity is claimed first (email), then the face is checked against that one stored template — never a 1:N "search the database for this face", because false matches multiply with every enrolled user.
+- **Face Verification (1:1):** "Is this the same person as the one enrolled under this identity?" Returns a match result only (protected templates yield no similarity score). Identity is claimed first (email), then the face is checked against that one stored template — never a 1:N "search the database for this face", because false matches multiply with every enrolled user.
 - **Face Detection:** Identify and return bounding box coordinates of faces within an image.
 - **Developer Portal:** Dashboard for sign-up, API key management, usage monitoring, and documentation.
 - **API Key–based access control:** Developers authenticate via `sk_live_` secret keys.
@@ -323,9 +324,15 @@ app/
 `FaceEngine` is a singleton class (only instantiated once per process). It loads two ML models on startup:
 
 1. **MediaPipe Face Detection** — a fast pre-check that counts how many faces are in the image. If there are zero or more than one, the request is rejected immediately before any expensive computation runs.
-2. **InsightFace ArcFace (`buffalo_l`)** — generates a **512-dimensional embedding vector** from a face: a mathematical fingerprint of the face.
+2. **InsightFace ArcFace (`buffalo_l`)** — generates a **512-dimensional embedding vector** from a face: a mathematical fingerprint of the face. Only its detection and recognition models are loaded; the pack's landmark and gender/age models don't change the embedding and cost ~60 ms p50 / ~200 ms p95 per image on CPU. Detection runs at 320x320 (45 ms vs 189 ms at 640), adopted only after re-running the LFW accuracy check (FRR 2.1% vs 2.2%, 0 false accepts). End-to-end verify on a laptop CPU: 250 ms median, 318 ms p95.
 
-The embedding is L2-normalized, so all vectors have a magnitude of 1 and cosine similarity equals a dot product.
+The embedding is L2-normalized, so all vectors have a magnitude of 1 and cosine similarity equals a dot product. InsightFace receives the image in BGR order (OpenCV's), MediaPipe in RGB; feeding InsightFace RGB (the pre-M2 bug) raised false rejects at τ from 17.5% to 27.4% on LFW.
+
+**`protection.py` — cancelable templates (M2)**
+
+Templates are versioned (`biometrics.template_version`): **1 = fp32** (1 MiB, the validated production format) and **2 = int8** (257 KiB, candidate). Verification reads both, so formats can coexist during a migration; `ENROL_TEMPLATE_VERSION` (default `1`) picks the format new enrolments are written in.
+
+Raw embeddings never leave the ML service and are never stored. Enrolment averages **5** photos into one template, then protects it with **IronMask** (α = 12): a secret random codeword `c` and a random orthogonal matrix `P` with `P·t = c`. Only `sha256(c)` (32 bytes) and `P` (1 MiB) are stored; neither reveals the face, and recovering it from a stolen pair takes ~2⁹¹ guesses. Verification decodes `P·t′` to the nearest codeword and compares hashes. α lives only here; τ (`matching.py`) now only gates enrolment: every one of the 5 photos must match their average, so one template can't mix people. Evidence and the accuracy/security trade-off: `spikes/ironmask/RESULTS.md`.
 
 **`main.py` — API Endpoints**
 
@@ -333,12 +340,10 @@ The embedding is L2-normalized, so all vectors have a magnitude of 1 and cosine 
 |----------|--------|:---:|---------|
 | `/` | GET | No | Basic status |
 | `/health` | GET | No | Returns `engine_initialized` (used by Docker's health check) |
-| `/vectorize` | POST | **Yes** | Accepts an image file, returns 512-dim vector |
-| `/verify_user` | POST | **Yes** | Accepts image + saved vector, returns `{match, confidence}` |
+| `/enroll` | POST | **Yes** | 5 image files (`files`) → protected template `{digest, helper}` (base64) |
+| `/verify` | POST | **Yes** | Image (`file`) + stored `helper` (binary part) + `digest` (base64) → `{match}` |
 
-The service **refuses to start** without `ML_SERVICE_API_KEY`, and rejects any `/vectorize` or `/verify_user` call without the matching `X-ML-Service-Key` header (401). Both endpoints reject images with zero or more than one face.
-
-**Important note:** `/verify_user` works, but the gateway currently **does not call it** — it calls `/vectorize` and computes cosine similarity itself in TypeScript. Matching must happen in one place (the ML service) with one threshold, so this is the first M1 task.
+The service **refuses to start** without `ML_SERVICE_API_KEY`, and rejects any `/enroll` or `/verify` call without the matching `X-ML-Service-Key` header (401). Both endpoints reject images with zero or more than one face, naming the failing photo.
 
 ---
 
@@ -382,7 +387,7 @@ api-gateway/
 | `POST /auth/email-register` | None | Register with email + password; emails a verification link |
 | `POST /auth/verify-email` | None | Confirm the emailed token (single use, 24 h) |
 | `POST /auth/email-login` | None | Login with email + password → JWT |
-| `POST /auth/register` | None | Face-login demo: email + face image + `consent=true` → JWT |
+| `POST /auth/register` | None | Face-login demo: email + 5 face `images` + `consent=true` → JWT |
 | `POST /auth/login` | None | Face-login demo: email + face image → JWT (1:1 against that email) |
 | `DELETE /auth/me` | JWT | Delete my account and everything attached to it |
 
@@ -392,8 +397,8 @@ All anonymous auth routes are rate limited per IP (5 burst, then 1 per 12 s).
 
 | Route | Purpose |
 |-------|---------|
-| `PUT /v1/subjects/:externalId` | Enroll or re-enroll a person. Multipart `image` + `consent=true` (+ optional `consent_reference`). Records a timestamped consent row. |
-| `POST /v1/subjects/:externalId/verify` | 1:1 verify `image` against that person → `{ match, confidence }` |
+| `PUT /v1/subjects/:externalId` | Enroll or re-enroll a person. Multipart: exactly 5 different photos as repeated `images` + `consent=true` (+ optional `consent_reference`). Records a timestamped consent row and stores a protected template. 400 names any photo with no/several faces, or that doesn't match the others. |
+| `POST /v1/subjects/:externalId/verify` | 1:1 verify `image` against that person → `{ match }`. 404 if never enrolled; **409 if enrolled before M2** (must re-enroll with 5 photos). |
 | `DELETE /v1/subjects/:externalId` | Delete the person, their template and consent records |
 
 `externalId` is the developer's own id for the person (1–128 of `A-Z a-z 0-9 _ . @ : -`). Images: JPEG/PNG/WebP (checked by content), max 5 MB. Responses carry `X-RateLimit-Limit/Remaining/Reset`; 429s carry `Retry-After`.
@@ -479,10 +484,11 @@ Portal API routes (`app/api/`) act as a **server-side** proxy: they attach the s
 
 ### 4.4 Examples (`examples/`)
 
-- **`nestjs-backend-integration.ts`** — how a NestJS backend would call our verify-face endpoint with an API key
-- **`react-frontend-integration.tsx`** — how a React app would integrate face capture and verification
+- **`imani-client.ts`** — a dependency-free, typed client for the developer's **server** (Node 18+): `enroll` (5 photos + consent), `verify`, `delete`, with `ImaniError` flags for 400 / 404 / 409 (re-enroll) and 429 `Retry-After`.
+- **`express-routes.ts`** — the developer's own backend routes using that client. The API key stays on their server, and the match decision is made there, never trusted from the browser.
+- **`react-enroll-verify.tsx`** — the browser side: capture 5 photos (with a consent checkbox) and 1 photo, posting only to the developer's backend.
 
-Illustrative only; not connected to the running application.
+Type-checked in strict mode against the real `express`/`multer`/`react` types. Not wired into the running application.
 
 ---
 
@@ -516,8 +522,8 @@ Environment variables are listed in [A2](#a2-first-time-setup-secrets).
 | Face detection (MediaPipe) | Done |
 | 512-dim ArcFace embedding generation | Done |
 | L2 normalization of embeddings | Done |
-| Cosine similarity for 1:1 verification | Done (but duplicated in TypeScript — see gap 11) |
-| Confidence score (0.0–1.0) returned | Done |
+| 1:1 verification against cancelable (IronMask) templates | Done (M2) — raw embeddings are never stored |
+| Multi-photo (5) enrolment with a same-person consistency gate | Done (M2) |
 | `/health` endpoint on both services | Done |
 | API key generation, revocation, listing | Done |
 | API key hashed before storage (never stored plaintext) | Done |
@@ -604,14 +610,17 @@ Global CORS is now locked to the portal (M0), but there are no "publishable keys
 
 ## 7. What Needs to Be Built Next
 
-Follow `IMANI_BUILD_PLAN.md`. M0 and M1 are built; next is **M2 — cancelable biometrics**, starting with the throwaway spike.
+Follow `IMANI_BUILD_PLAN.md`. M0, M1 and M2 (cancelable biometrics) are built; next is **M3 — risk engine**.
+
+Upgrading a database created before M2: run `db/m2-protected-templates.sql` once, before `npx drizzle-kit push`. It deletes the unprotected embeddings (they can't be converted) and keeps subjects, who then get 409 until re-enrolled with 5 photos. It also deletes password-less face-login demo accounts, which would otherwise be locked out.
 
 Known limits carried out of M1 (deliberate, documented):
 - API keys are still SHA-256 hashed (gap 5).
 - Portal users who sign in with GitHub/Google get no gateway session, so keys and the Live Test only work for email/password accounts.
 - `DELETE /auth/me` trusts the JWT alone (no password re-entry).
-- Verification returns `confidence`; rate limiting is the mitigation against score hill-climbing.
-- `examples/` still shows the old `verify-face` endpoint.
+- Verification no longer returns a score (M2), which also removes score hill-climbing as an attack.
+- Face-login demo accounts (no password) enrolled before M2 are deleted by the migration: they couldn't re-enroll (`/auth/register` refuses an existing email). A real product would need an email-verified re-enrolment flow instead.
+- Privacy policy (`/privacy`) is a **draft**: it needs the operator's legal name, a contact address, the hosting/email providers and legal review before launch. Terms of service (`/terms`) are a **draft, not in force**: nobody has agreed to them and nothing in the UI asks anyone to. Both need the operator's legal name, a contact address, a governing law, the hosting/email providers and legal review.
 
 ## 8. Security Issues & Fix Plan
 

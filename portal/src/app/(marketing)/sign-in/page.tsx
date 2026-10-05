@@ -47,14 +47,14 @@ export default function SignInPage() {
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <Image
               src="/logo.svg"
-              alt="FaceAuth Logo"
+              alt="Imani Vision Logo"
               width={32}
               height={32}
               className="h-8 w-8"
             />
           </Link>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Log in to FaceAuth
+            Log in to Imani Vision
           </h1>
           <p className="text-sm text-muted-foreground">
             Welcome back. Sign in to access your dashboard.

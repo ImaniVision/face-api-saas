@@ -9,34 +9,39 @@ import {
 
 const faqs = [
   {
-    question: "What types of applications can use FaceAuth?",
+    question: "What does the API do?",
     answer:
-      "FaceAuth is designed for any application requiring identity verification — fintech onboarding, healthcare patient ID, access control, e-commerce fraud prevention, and more. Our API works with web, mobile, and IoT applications.",
+      "It answers one question: is this photo the person you enrolled under this ID? You enroll someone from 5 photos, then check any new photo against that one record. It never searches across everyone you have enrolled, because every extra comparison is another chance to match the wrong person.",
   },
   {
-    question: "How do you ensure data privacy and security?",
+    question: "What do you store about a face?",
     answer:
-      "All biometric data is processed in-memory and never persisted to disk. We use end-to-end encryption for all API calls, and our infrastructure is SOC 2 Type II certified. Face vectors are one-way — they cannot be reverse-engineered back into images.",
+      "Per person, a 32-byte hash and a 1 MiB random rotation matrix (the IronMask scheme). The face embedding is computed inside our ML service, used once and discarded, and photos are never saved. Getting the embedding back from a stolen record takes about 2^91 guesses. Re-enrolling someone issues a new record that can't be linked to the old one.",
   },
   {
-    question: "Can FaceAuth detect spoofing attempts?",
+    question: "How accurate is it?",
     answer:
-      "Yes. Our passive liveness detection analyzes texture, depth cues, and micro-movements to distinguish real faces from photos, screens, or masks — all without requiring the user to perform any actions.",
+      "On LFW, a public set of web photos, 2.1% of genuine attempts were rejected and 0 of 155,000 impostor attempts were accepted (311 people, 5 enrollment photos each). That is inside the FIDO Alliance thresholds of 5% and 1 in 10,000. It is an offline benchmark, not a certification. Live selfies taken in one sitting should do better than web photos taken years apart.",
   },
   {
-    question: "What is the accuracy of face verification?",
+    question: "Why five photos to enroll?",
     answer:
-      "FaceAuth achieves 99.7% accuracy on standard benchmarks (LFW, FERET). Our false acceptance rate (FAR) is below 0.001% and false rejection rate (FRR) is below 0.5%, tunable via confidence thresholds.",
+      "Averaging five captures gives a steadier template. In our tests, enrolling from one photo rejected 15.9% of genuine attempts; enrolling from five rejected 2.2%. Turn your head a little between shots. If the five photos don't all look like the same person, enrollment fails and tells you which photo.",
   },
   {
-    question: "How fast is the API response time?",
+    question: "Does it detect spoofing?",
     answer:
-      "Average verification latency is under 200ms for 1:1 matching. Our infrastructure auto-scales to handle burst traffic, maintaining consistent sub-second response times even at 100K+ requests per minute.",
+      "Not yet. There is no liveness check, so a good printed photo of an enrolled person could pass. Use it where you can see who is in front of the camera, or alongside your own checks. Liveness detection is on the roadmap.",
   },
   {
-    question: "Do you offer SDKs for different platforms?",
+    question: "How do I delete someone's data?",
     answer:
-      "We provide official SDKs for Python, Node.js, Go, and a REST API for any language. Mobile SDKs for React Native, Flutter, iOS (Swift), and Android (Kotlin) are available for on-device capture.",
+      "DELETE /v1/subjects/{id} removes the person, their template and their consent records. Deleting your account removes every API key, person and usage record under it. Enrollment itself fails unless you send consent=true, and the consent is stored with a timestamp.",
+  },
+  {
+    question: "What does it cost?",
+    answer:
+      "Nothing during the beta. Each API key is limited to 60 calls a minute, with bursts of up to 20. Calls are counted per key so paid plans can be added later, but billing isn't built yet.",
   },
 ];
 
@@ -50,7 +55,7 @@ export function FAQ() {
             Frequently asked questions
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Advice and answers from our engineering team.
+            What the API does today, and what it doesn&apos;t do yet.
           </p>
         </div>
 
