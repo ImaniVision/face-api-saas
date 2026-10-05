@@ -93,7 +93,7 @@ export default function EnrollmentDocsPage() {
                         like the same person as the average of the 5; if one doesn&apos;t, enrollment fails and
                         names it. The average is then protected with IronMask: we pick a secret random code,
                         build a random 512x512 rotation that maps the face onto it, and keep only the
-                        rotation (1 MiB) and a SHA-256 hash of the code (32 bytes). The photos and embeddings are
+                        rotation (257 KiB, stored at 8-bit precision) and a SHA-256 hash of the code (32 bytes). The photos and embeddings are
                         discarded.
                     </p>
                     <p>
