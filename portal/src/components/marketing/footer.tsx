@@ -73,7 +73,7 @@ export function Footer() {
           <p className="text-sm text-ink/50">
             Imani means trust. We build the layer that keeps it.
           </p>
-        </div>
+DF        </div>
       </div>
     </footer>
   );
