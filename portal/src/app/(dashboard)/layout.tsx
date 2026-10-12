@@ -26,7 +26,7 @@ export default function DashboardLayout({
           onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-mist/50">{children}</main>
       </div>
     </div>
   );

@@ -7,13 +7,12 @@ import {
   Aperture,
   Key,
   BarChart3,
-  CreditCard,
+  BookOpen,
   PanelLeftClose,
   PanelLeft,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -23,80 +22,51 @@ interface SidebarProps {
 }
 
 const navItems = [
-  {
-    label: "Live Test",
-    href: "/dashboard/chat",
-    icon: Aperture,
-  },
-  {
-    label: "API Keys",
-    href: "/dashboard/api-keys",
-    icon: Key,
-  },
+  { label: "Live Test", href: "/dashboard/live-test", icon: Aperture },
+  { label: "API Keys", href: "/dashboard/api-keys", icon: Key },
 ];
 
-const manageItems = [
-  {
-    label: "Usage",
-    href: "/dashboard/usage",
-    icon: BarChart3,
-  },
-];
+const manageItems = [{ label: "Usage", href: "/dashboard/usage", icon: BarChart3 }];
 
-export function DashboardSidebar({
-  collapsed,
-  onToggle,
-  mobileOpen,
-  onMobileClose,
-}: SidebarProps) {
-  const pathname = usePathname();
+interface SidebarContentProps {
+  collapsed: boolean;
+  onToggle: () => void;
+  onMobileClose: () => void;
+  isActive: (href: string) => boolean;
+}
 
-  const isActive = (href: string) => pathname === href;
-
-  const SidebarContent = () => (
+function SidebarContent({ collapsed, onToggle, onMobileClose, isActive }: SidebarContentProps) {
+  return (
     <div className="flex h-full flex-col">
-      {/* Logo */}
-      <div className="flex h-14 items-center justify-between px-4 border-b border-border/40">
+      <div className="flex h-16 items-center justify-between border-b border-border px-4">
         <Link href="/dashboard" className="flex items-center gap-2.5">
-          <Image
-            src="/logo.svg"
-            alt="FaceAuth"
-            width={26}
-            height={26}
-            className="h-[26px] w-[26px]"
-          />
+          <Image src="/logo.svg" alt="Imani Vision" width={26} height={26} className="h-[26px] w-[26px]" />
           {!collapsed && (
-            <span className="text-[15px] font-semibold tracking-tight text-foreground">
-              FaceAuth{" "}
-              <span className="text-muted-foreground font-normal">
-                Platform
-              </span>
+            <span className="font-display text-[15px] font-semibold tracking-tight text-ink">
+              Imani Vision{" "}
+              <span className="font-normal text-ink/50">Console</span>
             </span>
           )}
         </Link>
 
-        {/* Desktop collapse toggle */}
         <button
           onClick={onToggle}
-          className="hidden lg:flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="hidden h-7 w-7 items-center justify-center rounded-md text-ink/50 transition-colors hover:bg-mist hover:text-ink lg:flex"
         >
-          {collapsed ?
-            <PanelLeft className="h-4 w-4" />
-          : <PanelLeftClose className="h-4 w-4" />}
+          {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
         </button>
 
-        {/* Mobile close */}
         <button
           onClick={onMobileClose}
-          className="lg:hidden h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+          aria-label="Close menu"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-ink/50 hover:text-ink lg:hidden"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        {/* Main items */}
+      <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
         <div className="space-y-1">
           {navItems.map((item) => (
             <Link
@@ -104,29 +74,21 @@ export function DashboardSidebar({
               href={item.href}
               onClick={onMobileClose}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
-                isActive(item.href) ?
-                  "bg-sidebar-accent text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                isActive(item.href)
+                  ? "bg-mist text-ink"
+                  : "text-ink/60 hover:bg-mist/60 hover:text-ink",
               )}
             >
-              <item.icon
-                className={cn(
-                  "h-[18px] w-[18px] shrink-0",
-                  isActive(item.href) ? "text-foreground" : (
-                    "text-muted-foreground"
-                  ),
-                )}
-              />
+              <item.icon className="h-[18px] w-[18px] shrink-0" />
               {!collapsed && <span>{item.label}</span>}
             </Link>
           ))}
         </div>
 
-        {/* Manage Section */}
         <div>
           {!collapsed && (
-            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-ink/40">
               Manage
             </p>
           )}
@@ -137,20 +99,13 @@ export function DashboardSidebar({
                 href={item.href}
                 onClick={onMobileClose}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
-                  isActive(item.href) ?
-                    "bg-sidebar-accent text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  isActive(item.href)
+                    ? "bg-mist text-ink"
+                    : "text-ink/60 hover:bg-mist/60 hover:text-ink",
                 )}
               >
-                <item.icon
-                  className={cn(
-                    "h-[18px] w-[18px] shrink-0",
-                    isActive(item.href) ? "text-foreground" : (
-                      "text-muted-foreground"
-                    ),
-                  )}
-                />
+                <item.icon className="h-[18px] w-[18px] shrink-0" />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             ))}
@@ -158,61 +113,55 @@ export function DashboardSidebar({
         </div>
       </nav>
 
-      {/* Bottom Card - Credits */}
       {!collapsed && (
-        <div className="mx-3 mb-4 rounded-xl border border-border/40 bg-card/60 p-4">
-          <div className="flex items-start justify-between">
-            <p className="text-sm font-semibold text-foreground">Add credits</p>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-            Run your next API request by adding credits.
+        <div className="mx-3 mb-4 rounded-xl border border-border bg-mist/60 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <BookOpen className="h-4 w-4 text-signal" /> New here?
           </p>
-          <Link href="/pricing">
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-3 w-full gap-2 text-xs border-border/60"
-            >
-              <CreditCard className="h-3.5 w-3.5" />
-              Go to Billing
-            </Button>
+          <p className="mt-1 text-xs leading-relaxed text-ink/60">
+            Every docs example runs. Start with the quickstart.
+          </p>
+          <Link
+            href="/docs"
+            className="mt-3 block rounded-lg bg-navy px-3 py-2 text-center text-xs font-semibold text-white transition-colors hover:bg-navy/90"
+          >
+            Read the quickstart
           </Link>
         </div>
       )}
     </div>
   );
+}
+
+export function DashboardSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
+  const pathname = usePathname();
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <>
-      {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-navy/40 backdrop-blur-sm lg:hidden"
           onClick={onMobileClose}
         />
       )}
 
-      {/* Mobile Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 lg:hidden",
+          "fixed inset-y-0 left-0 z-50 w-64 border-r border-border bg-white transition-transform duration-300 lg:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <SidebarContent />
+        <SidebarContent collapsed={false} onToggle={onToggle} onMobileClose={onMobileClose} isActive={isActive} />
       </aside>
 
-      {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 shrink-0",
+          "hidden shrink-0 flex-col border-r border-border bg-white transition-all duration-300 lg:flex",
           collapsed ? "w-[60px]" : "w-[240px]",
         )}
       >
-        <SidebarContent />
+        <SidebarContent collapsed={collapsed} onToggle={onToggle} onMobileClose={onMobileClose} isActive={isActive} />
       </aside>
     </>
   );

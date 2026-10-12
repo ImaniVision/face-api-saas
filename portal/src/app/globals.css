@@ -4,11 +4,38 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Imani Vision brand tokens — §2.2 / §2.3 of rebuild doc.
+   Single source of truth: change brand here, nowhere else. */
+@theme {
+  --color-navy: #0b1f3a;
+  --color-signal: #1e4fff;
+  --color-amber: #e8a23d;
+  --color-verified: #1faa76;
+  --color-mist: #f6f7fb;
+  --color-ink: #1a1d29;
+
+  --font-display: "General Sans", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* 6-size type scale — do not use sizes outside this scale */
+  --text-display: clamp(2rem, 5vw, 4rem);
+  --text-h1: clamp(2rem, 4vw, 3rem);
+  --text-h2: clamp(1.5rem, 3vw, 2.25rem);
+  --text-h3: 1.25rem;
+  --text-body: 1rem;
+  --text-caption: 0.875rem;
+
+  --animate-drift-a: drift-a 26s ease-in-out infinite alternate;
+  --animate-drift-b: drift-b 30s ease-in-out infinite alternate;
+  --animate-drift-c: drift-c 24s ease-in-out infinite alternate;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -17,11 +44,6 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -42,78 +64,61 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.871 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.871 0 0);
+  --radius: 0.75rem;
+  --background: #ffffff;
+  --foreground: var(--color-ink);
+  --card: #ffffff;
+  --card-foreground: var(--color-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-signal);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-mist);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-mist);
+  --muted-foreground: #5b6478;
+  --accent: var(--color-mist);
+  --accent-foreground: var(--color-ink);
+  --destructive: #d64545;
+  --border: #e3e7f0;
+  --input: #e3e7f0;
+  --ring: var(--color-signal);
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-navy);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--color-mist);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-border: #e3e7f0;
+  --sidebar-ring: var(--color-signal);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: var(--color-navy);
+  --foreground: #f2f4f9;
+  --card: #10294d;
+  --card-foreground: #f2f4f9;
+  --popover: #10294d;
+  --popover-foreground: #f2f4f9;
+  --primary: var(--color-signal);
+  --primary-foreground: #ffffff;
+  --secondary: #162d55;
+  --secondary-foreground: #f2f4f9;
+  --muted: #162d55;
+  --muted-foreground: #9aa7c2;
+  --accent: #162d55;
+  --accent-foreground: #f2f4f9;
+  --border: #223c68;
+  --input: #223c68;
+  --ring: #7d9bff;
+  --sidebar: var(--color-navy);
+  --sidebar-foreground: #f2f4f9;
+  --sidebar-accent: #162d55;
+  --sidebar-accent-foreground: #f2f4f9;
+  --sidebar-border: #223c68;
 }
 
 @layer base {
@@ -121,38 +126,575 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  code,
+  pre {
+    font-family: var(--font-mono);
   }
 }
 
-/* Scrolling animations for logo cloud and testimonials */
-@keyframes scroll {
-  0% {
+/* §3.1 hero blobs — CSS radial gradients, slow drift, off for reduced motion */
+@keyframes drift-a {
+  from {
+    transform: translate(-10%, -6%) scale(1);
+  }
+  to {
+    transform: translate(12%, 10%) scale(1.15);
+  }
+}
+@keyframes drift-b {
+  from {
+    transform: translate(8%, -10%) scale(1.1);
+  }
+  to {
+    transform: translate(-12%, 8%) scale(0.95);
+  }
+}
+@keyframes drift-c {
+  from {
+    transform: translate(0%, 10%) scale(0.95);
+  }
+  to {
+    transform: translate(6%, -12%) scale(1.1);
+  }
+}
+
+@keyframes flow-travel {
+  from {
+    left: 0;
+  }
+  to {
+    left: calc(100% - 6px);
+  }
+}
+
+/* Hero waves — seamless horizontal drift (wave period divides width) */
+@keyframes wave-drift {
+  from {
     transform: translateX(0);
   }
-  100% {
-    transform: translateX(-50%);
+  to {
+    transform: translateX(-16.6667%);
   }
 }
 
-@keyframes scroll-slow {
+/* Face ID scan loop — dots circle, eyes blink, resolves verified */
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.08);
+  }
+}
+@keyframes scan-fade {
+  0%,
+  58% {
+    opacity: 1;
+  }
+  66%,
+  90% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes scan-ring {
   0% {
-    transform: translateX(0);
+    stroke-dashoffset: 276;
+    stroke: #1e4fff;
+  }
+  55% {
+    stroke-dashoffset: 0;
+    stroke: #1e4fff;
+  }
+  65%,
+  90% {
+    stroke-dashoffset: 0;
+    stroke: #1faa76;
   }
   100% {
-    transform: translateX(-50%);
+    stroke-dashoffset: 276;
+    stroke: #1e4fff;
+  }
+}
+@keyframes verified-pop {
+  0%,
+  60% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  68%,
+  88% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6);
   }
 }
 
-.animate-scroll {
-  animation: scroll 25s linear infinite;
+/* Operated-card loops — each mock plays a user completing a task.
+   Shared 8s tempo; all applied motion-safe in markup. */
+@keyframes tx-a {
+  0%,
+  42% {
+    opacity: 1;
+  }
+  50%,
+  92% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes tx-b {
+  0%,
+  42% {
+    opacity: 0;
+  }
+  50%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes wave-draw {
+  0% {
+    stroke-dashoffset: 640;
+    opacity: 1;
+  }
+  35%,
+  80% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  88%,
+  94% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+  96% {
+    stroke-dashoffset: 640;
+    opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: 640;
+    opacity: 1;
+  }
+}
+@keyframes revoke-glow {
+  0%,
+  46%,
+  80%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(30, 79, 255, 0);
+  }
+  55%,
+  70% {
+    box-shadow: 0 0 0 4px rgba(30, 79, 255, 0.18);
+  }
+}
+@keyframes scan-sweep {
+  from {
+    transform: translateY(-120%);
+  }
+  to {
+    transform: translateY(380%);
+  }
+}
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0.1);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+/* Breach drill — hard cuts between states so text never mashes */
+@keyframes drill-a {
+  0%,
+  44% {
+    opacity: 1;
+  }
+  48%,
+  92% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes drill-b {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  48%,
+  92% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+/* Scaling drill — load swells, badge pops at the peak */
+@keyframes load-cycle {
+  0%,
+  100% {
+    width: 18%;
+  }
+  30% {
+    width: 88%;
+  }
+  55%,
+  70% {
+    width: 88%;
+  }
+  85% {
+    width: 25%;
+  }
+}
+@keyframes badge-pop {
+  0%,
+  26%,
+  62%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  34%,
+  54% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* Onboarding steps lighting in sequence */
+@keyframes step-on {
+  0%,
+  8% {
+    border-color: rgba(26, 29, 41, 0.15);
+    background: transparent;
+    color: rgba(26, 29, 41, 0.4);
+  }
+  20%,
+  72% {
+    border-color: #1faa76;
+    background: rgba(31, 170, 118, 0.12);
+    color: #1faa76;
+  }
+  84%,
+  100% {
+    border-color: rgba(26, 29, 41, 0.15);
+    background: transparent;
+    color: rgba(26, 29, 41, 0.4);
+  }
 }
 
-.animate-scroll-slow {
-  animation: scroll-slow 40s linear infinite;
+/* Hero closer — quiet looping line at the end of the hero. Letters tumble
+   in and back out on a 6s loop. Applied motion-safe in markup. */
+@keyframes closer-roll {
+  0%,
+  6% {
+    opacity: 0;
+    transform: translateY(0.5em) rotateX(-75deg);
+    filter: blur(3px);
+  }
+  16%,
+  70% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+    filter: blur(0);
+  }
+  82%,
+  100% {
+    opacity: 0;
+    transform: translateY(-0.4em) rotateX(60deg);
+    filter: blur(3px);
+  }
 }
 
-.animate-scroll:hover,
-.animate-scroll-slow:hover {
-  animation-play-state: paused;
+/* Welcome loop (hero) — each letter materialises from a small blue ball,
+   holds while glitter twinkles, then shimmers out as the 9s loop repeats.
+   Letter animations are applied motion-safe in markup; without motion the
+   line simply rests fully visible. */
+@keyframes welcome-letter {
+  0%,
+  3% {
+    opacity: 0;
+    transform: translateY(0.35em);
+    filter: blur(4px);
+  }
+  9%,
+  72% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: translateY(-0.2em);
+    filter: blur(4px);
+  }
+}
+@keyframes welcome-ball {
+  0%,
+  2% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  5% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+  9%,
+  72% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes glitter-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(90deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glitter-a {
+    animation: glitter-twinkle 2.2s ease-in-out infinite;
+  }
+  .glitter-b {
+    animation: glitter-twinkle 3s ease-in-out infinite;
+  }
+  .glitter-c {
+    animation: glitter-twinkle 2.6s ease-in-out infinite;
+  }
+}
+
+/* Trust strip protect loop — hard cuts between phases so shapes never mash.
+   Shared 9s tempo; all applied motion-safe in markup. */
+@keyframes protect-a {
+  0%,
+  24% {
+    opacity: 1;
+  }
+  30%,
+  90% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes protect-b {
+  0%,
+  28% {
+    opacity: 0;
+  }
+  36%,
+  58% {
+    opacity: 1;
+  }
+  66%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes protect-c {
+  0%,
+  60% {
+    opacity: 0;
+  }
+  68%,
+  90% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Shared hero glow tokens — card gradients reuse these, no new colours */
+:root {
+  --glow-blue: 30, 79, 255;
+  --glow-amber: 232, 162, 61;
+  --glow-ice: 125, 155, 255;
+  --glow-navy: 11, 31, 58;
+}
+
+/* Slow glow drift — translate and scale only, 20-30s loops */
+@keyframes glow-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(4%, -6%) scale(1.12);
+  }
+}
+
+.card-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card-glow-drift {
+    animation: glow-drift 26s ease-in-out infinite alternate;
+  }
+}
+
+/* Feature card grid — auto-fit min 280px; single column below 700px;
+   explicit 2fr/1fr → 3 equal → full-width rows at 1100px and up. */
+.feature-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (max-width: 699px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1100px) {
+  .feature-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .feature-grid > article {
+    min-height: 500px;
+    max-height: 540px;
+  }
+}
+
+/* Faint grain overlay for bento cards (SVG turbulence, palette-neutral) */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='0.6'/></svg>");
+}
+
+/* Scroll reveal — pure CSS view timeline, no JS. Unsupported browsers
+   ignore it and show content normally. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-rise {
+    animation: rise-in 0.7s ease-out both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 60%;
+  }
+  .scroll-rise-stagger {
+    animation: rise-in 0.7s ease-out both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 60%;
+  }
+  .scroll-rise-stagger > *:nth-child(2) {
+    animation-delay: 0.08s;
+  }
+  .scroll-rise-stagger > *:nth-child(3) {
+    animation-delay: 0.16s;
+  }
+  .scroll-rise-stagger > *:nth-child(4) {
+    animation-delay: 0.24s;
+  }
+  .scroll-rise-stagger > *:nth-child(5) {
+    animation-delay: 0.32s;
+  }
+  .scroll-rise-stagger > *:nth-child(6) {
+    animation-delay: 0.4s;
+  }
+  .bar-grow {
+    transform-origin: bottom;
+    animation: bar-grow 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 10% entry 50%;
+  }
+  .bar-grow-wrap > *:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  .bar-grow-wrap > *:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  .bar-grow-wrap > *:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+  .bar-grow-wrap > *:nth-child(5) {
+    animation-delay: 0.2s;
+  }
+  .bar-grow-wrap > *:nth-child(6) {
+    animation-delay: 0.25s;
+  }
+  .bar-grow-wrap > *:nth-child(7) {
+    animation-delay: 0.3s;
+  }
+  .bar-grow-wrap > *:nth-child(8) {
+    animation-delay: 0.35s;
+  }
+  .bar-grow-wrap > *:nth-child(9) {
+    animation-delay: 0.4s;
+  }
+  .bar-grow-wrap > *:nth-child(10) {
+    animation-delay: 0.45s;
+  }
+  .bar-grow-wrap > *:nth-child(11) {
+    animation-delay: 0.5s;
+  }
+  .bar-grow-wrap > *:nth-child(12) {
+    animation-delay: 0.55s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-blob {
+    animation: none !important;
+  }
 }

@@ -1,23 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthSessionProvider } from "@/components/session-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "FaceAuth — Facial Recognition Infrastructure",
+  title: "Imani Vision — Facial Verification API",
   description:
-    "Enterprise-grade facial recognition API. Integrate face verification, liveness detection, and identity analytics into your application in minutes.",
+    "Verify logins, approve transactions, and run liveness checks with face templates that can't be turned back into a face.",
 };
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -30,12 +32,20 @@ export default function RootLayout({
   return (
     <AuthSessionProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          {/* General Sans for headings (§2.3). Inter is the fallback until it loads. */}
+          <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
+          <link
+            href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap"
+            rel="stylesheet"
+          />
+        </head>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+          className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
         >
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="light"
             disableTransitionOnChange
           >
             {children}

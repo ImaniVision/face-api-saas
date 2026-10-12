@@ -42,12 +42,12 @@ export function UsageChart() {
   const totalCalls = usageData.reduce((sum, d) => sum + d.calls, 0);
 
   return (
-    <Card className="border-border/40 bg-card/80 backdrop-blur-sm">
+    <Card className="border-border bg-white">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <BarChart3 className="h-5 w-5 text-indigo-400" />
+            <CardTitle className="flex items-center gap-2 text-lg text-ink">
+              <BarChart3 className="h-5 w-5 text-signal" />
               API Calls This Month
             </CardTitle>
             <CardDescription className="mt-1">
@@ -55,14 +55,14 @@ export function UsageChart() {
             </CardDescription>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-foreground">
+            <div className="font-display text-2xl font-semibold text-ink">
               {totalCalls.toLocaleString()}
             </div>
             <Badge
               variant="outline"
-              className="border-green-500/30 bg-green-500/10 text-green-400"
+              className="border-amber/40 bg-amber/10 font-mono text-[11px] text-ink"
             >
-              +23% vs last month
+              sample data
             </Badge>
           </div>
         </div>
@@ -76,50 +76,42 @@ export function UsageChart() {
             >
               <defs>
                 <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="hsl(263, 70%, 55%)"
-                    stopOpacity={0.4}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="hsl(263, 70%, 55%)"
-                    stopOpacity={0}
-                  />
+                  <stop offset="0%" stopColor="#1E4FFF" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#1E4FFF" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(0, 0%, 20%)"
+                stroke="#E3E7F0"
                 vertical={false}
               />
               <XAxis
                 dataKey="day"
-                stroke="hsl(0, 0%, 45%)"
+                stroke="#8A94A8"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke="hsl(0, 0%, 45%)"
+                stroke="#8A94A8"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 12%)",
-                  border: "1px solid hsl(0, 0%, 20%)",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #E3E7F0",
                   borderRadius: "8px",
                   fontSize: "13px",
-                  color: "hsl(0, 0%, 90%)",
+                  color: "#1A1D29",
                 }}
-                labelStyle={{ color: "hsl(0, 0%, 60%)" }}
+                labelStyle={{ color: "#5B6478" }}
               />
               <Area
                 type="monotone"
                 dataKey="calls"
-                stroke="hsl(263, 70%, 55%)"
+                stroke="#1E4FFF"
                 strokeWidth={2.5}
                 fill="url(#colorCalls)"
               />
