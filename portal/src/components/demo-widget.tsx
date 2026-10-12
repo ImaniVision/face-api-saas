@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback } from "react";
 import Webcam from "react-webcam";
-import { useSession } from "next-auth/react";
 import {
   Camera,
   RotateCcw,
@@ -11,7 +10,8 @@ import {
   XCircle,
   Aperture,
   ShieldAlert,
-  ChevronDown,
+  Trash2,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CameraPermissionModal } from "./camera-permission-modal";
@@ -23,23 +23,38 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { apiWithToken } from "@/lib/api";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
-interface VerifyResponse {
-  match: boolean;
-  confidence: number;
-  message: string;
-  [key: string]: unknown;
+type DemoResult =
+  | { kind: "enrolled"; consentGrantedAt: string }
+  | { kind: "verified"; match: boolean; confidence: number }
+  | { kind: "deleted" };
+
+type Action = "enroll" | "verify" | "delete";
+
+const METHOD: Record<Action, string> = {
+  enroll: "PUT",
+  verify: "POST",
+  delete: "DELETE",
+};
+
+function describeError(status: number, body: unknown): string {
+  const message = (body as { message?: unknown } | null)?.message;
+  if (Array.isArray(message)) return message.join("; ");
+  if (status === 404) return "No face enrolled yet. Enroll first.";
+  return typeof message === "string" ?
+      message
+    : "Request failed. Is the gateway running?";
 }
 
 export function DemoWidget() {
-  const { data: session } = useSession();
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [result, setResult] = useState<VerifyResponse | null>(null);
-  const [latencyMs, setLatencyMs] = useState<number | null>(null);
+  const [pending, setPending] = useState<Action | null>(null);
+  const [result, setResult] = useState<DemoResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasConsent, setHasConsent] = useState(false);
   const [isCameraAllowed, setIsCameraAllowed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -60,31 +75,44 @@ export function DemoWidget() {
     setError(null);
   };
 
-  const verify = async () => {
-    if (!capturedImage) return;
-
-    setIsVerifying(true);
+  const run = async (action: Action) => {
+    setPending(action);
     setError(null);
+    setResult(null);
 
     const started = performance.now();
     try {
-      const token = (session?.user as { id?: string })?.id || null;
-      const response = await apiWithToken(token).post("/verify", {
-        image: capturedImage,
-      });
-      setLatencyMs(Math.round(performance.now() - started));
-      setResult(response.data);
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Verification failed. Ensure the backend is running.";
-      setError(errorMessage);
-      setResult(null);
+      let body: FormData | undefined;
+      if (action !== "delete" && capturedImage) {
+        body = new FormData();
+        const image = await (await fetch(capturedImage)).blob();
+        body.append("image", image, "selfie.jpg");
+        if (action === "enroll") body.append("consent", String(hasConsent));
+      }
+
+      const res = await fetch("/api/demo", { method: METHOD[action], body });
+      const data = res.status === 204 ? null : await res.json();
+
+      if (!res.ok) {
+        setError(describeError(res.status, data));
+        return;
+      }
+
+      setResult(
+        action === "enroll" ?
+          { kind: "enrolled", consentGrantedAt: data.consentGrantedAt }
+        : action === "verify" ?
+          { kind: "verified", match: data.match, confidence: data.confidence }
+        : { kind: "deleted" },
+      );
+    } catch {
+      setError("Request failed. Is the gateway running?");
     } finally {
-      setIsVerifying(false);
+      setPending(null);
     }
   };
+
+  const isBusy = pending !== null;
 
   return (
     <Card className="overflow-hidden border-border bg-white">
@@ -96,7 +124,7 @@ export function DemoWidget() {
               Live Verification Demo
             </CardTitle>
             <CardDescription className="mt-1">
-              Capture a face and run a real verification against the API
+              Enroll your own face, then verify a new selfie against it (1:1)
             </CardDescription>
           </div>
           <Badge variant="outline" className="border-signal/30 bg-signal/[0.07] text-signal">
@@ -141,18 +169,42 @@ export function DemoWidget() {
             <img src={capturedImage} alt="Captured selfie" className="w-full" />
           )}
 
-          {isVerifying && (
-            <div className="absolute inset-0 flex items-center justify-center bg-navy/50 backdrop-blur-[2px]">
+          : <img src={capturedImage} alt="Captured selfie" className="w-full" />
+          }
+
+          {/* Scanning overlay animation */}
+          {isBusy && pending !== "delete" && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
               <div className="flex flex-col items-center gap-3">
-                <div className="h-28 w-28 animate-pulse rounded-full border-2 border-dashed border-white/50" />
-                <p className="text-sm font-medium text-white">Analyzing face…</p>
+                <div className="h-32 w-32 animate-pulse rounded-full border-2 border-dashed border-violet-400/60" />
+                <p className="text-sm font-medium text-violet-300">
+                  {pending === "enroll" ? "Enrolling face..." : "Analyzing face..."}
+                </p>
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex gap-3">
-          {!capturedImage ? (
+        {/* Consent */}
+        <div className="flex items-start gap-3 rounded-lg border border-border/40 p-3">
+          <Checkbox
+            id="demo-consent"
+            checked={hasConsent}
+            onCheckedChange={(checked) => setHasConsent(checked === true)}
+            className="mt-0.5"
+          />
+          <Label
+            htmlFor="demo-consent"
+            className="text-xs font-normal leading-relaxed text-muted-foreground"
+          >
+            I consent to Imani Vision storing a biometric template of my face
+            for this demo. I can delete it at any time. Required to enroll.
+          </Label>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-3">
+          {!capturedImage ?
             <Button
               onClick={isCameraAllowed ? capture : () => setIsModalOpen(true)}
               className="flex-1 bg-signal text-white hover:bg-signal/90"
@@ -163,26 +215,50 @@ export function DemoWidget() {
           ) : (
             <>
               <Button
-                onClick={verify}
-                disabled={isVerifying}
-                className="flex-1 bg-signal text-white hover:bg-signal/90"
+                onClick={() => run("enroll")}
+                disabled={isBusy || !hasConsent}
+                variant="outline"
+                className="flex-1 gap-2 border-border/60"
               >
-                {isVerifying ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Camera className="mr-2 h-4 w-4" />
-                )}
-                {isVerifying ? "Verifying…" : "Verify Face"}
+                {pending === "enroll" ?
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                : <UserPlus className="h-4 w-4" />}
+                Enroll this face
               </Button>
-              <Button onClick={reset} variant="outline" className="gap-2">
+              <Button
+                onClick={() => run("verify")}
+                disabled={isBusy}
+                className="flex-1 gap-2 bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:brightness-110"
+              >
+                {pending === "verify" ?
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                : <Camera className="h-4 w-4" />}
+                Verify Face
+              </Button>
+              <Button
+                onClick={reset}
+                disabled={isBusy}
+                variant="outline"
+                className="gap-2 border-border/60"
+              >
                 <RotateCcw className="h-4 w-4" />
                 Retake
               </Button>
             </>
           )}
         </div>
+        <button
+          type="button"
+          onClick={() => run("delete")}
+          disabled={isBusy}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Delete my enrolled demo face
+        </button>
 
-        {result && (
+        {/* Result Display */}
+        {result?.kind === "verified" && (
           <div
             className={`rounded-xl border p-4 ${
               result.match
@@ -191,54 +267,47 @@ export function DemoWidget() {
             }`}
           >
             <div className="flex items-center gap-2">
-              {result.match ? (
-                <CheckCircle2 className="h-5 w-5 text-verified" />
-              ) : (
-                <XCircle className="h-5 w-5 text-destructive" />
-              )}
+              {result.match ?
+                <CheckCircle2 className="h-5 w-5 text-green-400" />
+              : <XCircle className="h-5 w-5 text-red-400" />}
               <span
                 className={`font-semibold ${result.match ? "text-verified" : "text-destructive"}`}
               >
-                {result.match ? "Match found" : "No match"}
+                {result.match ? "Match" : "No Match"}
               </span>
-              {latencyMs !== null && (
-                <span className="ml-auto font-mono text-xs text-ink/50">{latencyMs}ms</span>
-              )}
+              <Badge
+                variant="outline"
+                className={`ml-auto ${
+                  result.match ?
+                    "border-green-500/30 text-green-400"
+                  : "border-red-500/30 text-red-400"
+                }`}
+              >
+                {(result.confidence * 100).toFixed(1)}% similarity
+              </Badge>
             </div>
-
-            {typeof result.confidence === "number" && (
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-ink/60">Confidence</span>
-                  <span className="font-mono font-semibold text-ink">
-                    {(result.confidence * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-ink/10">
-                  <div
-                    className={`h-full rounded-full ${result.match ? "bg-verified" : "bg-destructive"}`}
-                    style={{ width: `${Math.min(100, result.confidence * 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            <details className="mt-3">
-              <summary className="flex cursor-pointer items-center gap-1 text-xs font-medium text-ink/50 hover:text-ink">
-                <ChevronDown className="h-3.5 w-3.5" /> Raw response
-              </summary>
-              <pre className="mt-2 overflow-auto rounded-lg bg-navy p-3 font-mono text-xs text-white">
-                {JSON.stringify(result, null, 2)}
-              </pre>
-            </details>
+          </div>
+        )}
+        {result?.kind === "enrolled" && (
+          <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-400">
+            <CheckCircle2 className="h-5 w-5 shrink-0" />
+            Enrolled. Consent recorded at{" "}
+            {new Date(result.consentGrantedAt).toLocaleString()}. Retake a
+            selfie and verify it.
+          </div>
+        )}
+        {result?.kind === "deleted" && (
+          <div className="flex items-center gap-2 rounded-lg border border-border/40 p-4 text-sm text-muted-foreground">
+            <Trash2 className="h-5 w-5 shrink-0" />
+            Your demo face template and consent record were deleted.
           </div>
         )}
 
         {error && (
           <div className="rounded-xl border border-destructive/30 bg-destructive/[0.05] p-4">
             <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-destructive" />
-              <span className="text-sm text-destructive">{error}</span>
+              <XCircle className="h-5 w-5 shrink-0 text-red-400" />
+              <span className="text-sm text-red-400">{error}</span>
             </div>
           </div>
         )}

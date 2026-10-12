@@ -47,23 +47,60 @@ export function Footer() {
               checks. Verify continuously, store nothing recoverable.
             </p>
           </div>
-          {columns.map((col) => (
-            <div key={col.title}>
-              <h4 className="mb-4 text-sm font-semibold text-ink">{col.title}</h4>
-              <ul className="space-y-3">
-                {col.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-ink/60 transition-colors hover:text-ink"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Product */}
+          <div>
+            <h4 className="text-base font-semibold text-foreground mb-6">
+              Product
+            </h4>
+            <ul className="space-y-4">
+              {footerLinks.product.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Company */}
+          <div>
+            <h4 className="text-base font-semibold text-foreground mb-6">
+              Company
+            </h4>
+            <ul className="space-y-4">
+              {footerLinks.company.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Legal */}
+          <div>
+            <h4 className="text-base font-semibold text-foreground mb-6">
+              Legal
+            </h4>
+            <ul className="space-y-4">
+              {footerLinks.legal.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-border pt-8 sm:flex-row sm:items-center">

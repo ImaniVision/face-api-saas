@@ -4,7 +4,8 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, UserPlus } from "lucide-react";
+import Image from "next/image";
+import { Loader2, MailCheck, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +28,9 @@ export default function SignUpPage() {
       setError("Enter your work email.");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
 
@@ -46,23 +45,41 @@ export default function SignUpPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.error || "Registration failed. Try a different email.");
+        setError(data.error || "Registration failed");
         return;
       }
 
-      const result = await signIn("credentials", { email, password, redirect: false });
-      if (result?.error) {
-        router.push("/sign-in");
-      } else {
-        router.push("/dashboard");
-        router.refresh();
-      }
+      setSentTo(email);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (sentTo) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
+        <div className="w-full max-w-md space-y-4 text-center">
+          <MailCheck className="mx-auto h-10 w-10 text-primary" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Check your email
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            We sent a verification link to{" "}
+            <span className="font-medium text-foreground">{sentTo}</span>.
+            Verify your email, then sign in to create API keys.
+          </p>
+          <Link
+            href="/sign-in"
+            className="inline-block text-sm font-medium text-primary hover:underline"
+          >
+            Go to sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthCard
@@ -101,17 +118,75 @@ export default function SignUpPage() {
             autoComplete="email"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Minimum 6 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-          />
+
+        {/* Email/Password Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              className="bg-card border-border/60"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Minimum 8 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              className="bg-card border-border/60"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              className="bg-card border-border/60"
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-destructive font-medium">{error}</p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
+          >
+            {isLoading ?
+              <Loader2 className="h-4 w-4 animate-spin" />
+            : <UserPlus className="h-4 w-4" />}
+            {isLoading ? "Creating account..." : "Create Account"}
+          </Button>
+        </form>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border/40" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm-password">Confirm password</Label>

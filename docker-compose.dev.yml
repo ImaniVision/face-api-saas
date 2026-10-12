@@ -1,7 +1,7 @@
 # Local development overlay — layered on top of docker-compose.yml:
 #   npm run dev:infra        (from the repo root)
 #
-# Opens the ML service and Postgres on THIS machine only (127.0.0.1), so the gateway can run
+# Opens the ML service, Postgres, Redis and Mailpit SMTP on THIS machine only (127.0.0.1), so the gateway can run
 # on the host with hot reload (`npm run start:dev` in api-gateway/) and DB tools can connect.
 # Nothing here is reachable from the network. Never use this file on a server.
 
@@ -13,6 +13,14 @@ services:
   db:
     ports:
       - "127.0.0.1:5432:5432"
+
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  mailpit:
+    ports:
+      - "127.0.0.1:1025:1025"
 
   # The gateway runs on the host in dev, so keep its container off (it would clash on port 3000).
   # To run it in Docker anyway: `docker compose --profile full ...`

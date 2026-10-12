@@ -62,7 +62,7 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
-test_*.py
+/test_*.py
 *.jpg
 *.png
 *.jpeg

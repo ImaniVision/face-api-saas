@@ -1,0 +1,31 @@
+"""
+The face-match decision. THE one place τ lives — the gateway never compares embeddings.
+Kept free of model imports so it can be tested without loading the ML models.
+"""
+
+from typing import Sequence, Tuple
+
+import numpy as np
+
+# τ: cosine similarity at or above this is a match. A false accept is unrecoverable
+# (you cannot reset a face), so raise it rather than lower it when in doubt.
+MATCH_THRESHOLD = 0.6
+
+
+def cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
+    """Cosine similarity clamped to [0, 1] (negative similarity is simply 'no match')."""
+    va = np.asarray(a, dtype=np.float64)
+    vb = np.asarray(b, dtype=np.float64)
+    denom = np.linalg.norm(va) * np.linalg.norm(vb)
+    if denom == 0:
+        raise ValueError("Cannot compare a zero-length embedding")
+    return max(0.0, min(1.0, float(np.dot(va, vb) / denom)))
+
+
+def is_match(similarity: float) -> bool:
+    return similarity >= MATCH_THRESHOLD
+
+
+def decide(saved: Sequence[float], current: Sequence[float]) -> Tuple[bool, float]:
+    similarity = cosine_similarity(saved, current)
+    return is_match(similarity), similarity

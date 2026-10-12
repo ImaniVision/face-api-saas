@@ -15,6 +15,21 @@ import {
   TransactionMock,
 } from "@/components/marketing/animated-mocks";
 
+const VERIFY_SNIPPET = `// 1:1 check: is this selfie the customer you enrolled?
+const form = new FormData();
+form.append("image", selfie);
+
+const res = await fetch(
+  \`\${process.env.IMANI_API_URL}/v1/subjects/customer_123/verify\`,
+  {
+    method: "POST",
+    headers: { "x-api-key": process.env.IMANI_API_KEY },
+    body: form,
+  },
+);
+
+const { match, confidence } = await res.json();`;
+
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -68,90 +83,38 @@ export default function HomePage() {
 
       <TrustStrip />
 
-      {/* Feature cards */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6">
-          <div className="scroll-rise-stagger feature-grid">
-            {/* 1 — login */}
-            <BentoCard
-              title="Built for the faces you serve."
-              body="If it only works in a lab, it doesn't work. Real cameras, real lighting — numbers only after evaluation."
-              learnHref="/platform"
-              className="min-[1100px]:col-span-2"
-            >
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-verified motion-safe:animate-pulse" />
-                <span className="font-mono text-[13px] font-medium text-ink/55">face check</span>
+            {/* Code snippet IDE mockup */}
+            <div className="relative overflow-hidden border rounded-xl bg-zinc-950 border-zinc-800 shadow-2xl">
+              <div className="flex items-center px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
+                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
+                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
+                </div>
+                <div className="flex items-center justify-center flex-1">
+                  <span className="text-xs text-zinc-400 font-mono">
+                    verify.js
+                  </span>
+                </div>
               </div>
-              <div className="[&>svg]:mx-auto [&>svg]:h-36 [&>svg]:w-36">
-                <FaceIdScan />
-              </div>
-            </BentoCard>
-
-            {/* 2 — onboarding flow */}
-            <BentoCard
-              title="Checks your users can pass."
-              body="A missed check ends in a retry, not a dead end. Fewer lockouts, fewer support tickets."
-              learnHref="/platform"
-              variant={2}
-            >
-              <OnboardingMock />
-            </BentoCard>
-
-            {/* 3 — liveness (dark, hero-like) */}
-            <BentoCard
-              title="Stops spoofs and deepfakes."
-              body="Photos, replays, and AI-swapped faces get caught by liveness checks on every verification."
-              learnHref="/platform"
-              variant={3}
-            >
-              <LivenessMock />
-            </BentoCard>
-
-            {/* 4 — protected templates */}
-            <BentoCard
-              title="Store templates, never faces."
-              body="Templates can't turn back into faces. Steal the database, hold nothing — then we revoke and reissue."
-              learnHref="/security"
-              variant={4}
-            >
-              <TemplateMock />
-            </BentoCard>
-
-            {/* 5 — pricing */}
-            <BentoCard
-              title="Pricing that follows your usage."
-              body="One price per check type, no seats. Volume brings the unit price down."
-              learnHref="/pricing"
-              variant={5}
-            >
-              <PriceMock />
-            </BentoCard>
-
-            {/* 6 — docs */}
-            <BentoCard
-              title="Endpoints that won’t break on you."
-              body="A quickstart where every request runs, and versioned endpoints that won't break you."
-              learnHref="/docs"
-              variant={6}
-              className="min-[1100px]:col-span-3"
-            >
-              <CodeMock />
-            </BentoCard>
+              <pre className="p-6 text-sm font-mono text-zinc-300 overflow-x-auto">
+                <code>{VERIFY_SNIPPET}</code>
+              </pre>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="bg-mist">
-        <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6">
-          <p className="max-w-3xl font-display text-h1 font-semibold leading-tight tracking-tight text-ink">
-            Capture. Protect. Verify.{" "}
-            <span className="text-ink/50">
-              A face becomes a protected template in one step. After that, every
-              login, transaction, and routine check is a comparison against
-              something that can&apos;t be reversed.
-            </span>
+      {/* Middle CTA */}
+      <section className="relative z-10 py-16 sm:py-24 border-t border-border bg-background/90 backdrop-blur-md">
+        <div className="px-4 sm:px-6 mx-auto text-center w-full max-w-7xl">
+          <Terminal className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-6 text-muted-foreground/50" />
+          <h2 className="mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
+            Write in code, not config.
+          </h2>
+          <p className="max-w-2xl mx-auto mb-8 sm:mb-10 text-base sm:text-lg md:text-xl text-muted-foreground px-4">
+            Our API is designed for developers who want to ship fast and iterate
+            quickly. Enroll, verify and delete with three plain HTTP calls.
           </p>
           <div className="scroll-rise-stagger mt-10 grid gap-4 md:grid-cols-3">
             {[

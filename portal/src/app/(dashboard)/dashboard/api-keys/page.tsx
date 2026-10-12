@@ -80,7 +80,8 @@ export default function ApiKeysPage() {
         setNewKeyName("");
         fetchKeys();
       } else {
-        toast.error("Failed to create key");
+        const body = await res.json().catch(() => null);
+        toast.error(body?.message ?? "Failed to create key");
       }
     } catch {
       toast.error("An error occurred");
@@ -165,16 +166,12 @@ export default function ApiKeysPage() {
               </tr>
             ) : apiKeys.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-8 text-center">
-                  <p className="text-sm text-ink/60">No API keys yet.</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4"
-                    onClick={() => setIsCreateOpen(true)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Create your first key
-                  </Button>
+                <td
+                  colSpan={5}
+                  className="p-8 text-center text-muted-foreground"
+                >
+                  No API keys found. Click &quot;Create new secret key&quot; to generate
+                  one.
                 </td>
               </tr>
             ) : (
@@ -244,29 +241,32 @@ export default function ApiKeysPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Reveal dialog */}
-      <Dialog open={newlyCreatedKey !== null} onOpenChange={() => setNewlyCreatedKey(null)}>
-        <DialogContent className="bg-white sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-ink">Save your secret key</DialogTitle>
-            <DialogDescription>
-              Copy it somewhere safe. For security reasons{" "}
-              <strong>you won&apos;t see it again</strong> — lose it and you
-              generate a new one.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center gap-3 rounded-lg border border-border bg-mist p-3">
-            <code className="flex-1 break-all font-mono text-sm text-ink">
-              {newlyCreatedKey}
-            </code>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => newlyCreatedKey && copyKey(newlyCreatedKey)}
-              aria-label="Copy key"
-            >
-              {copied ? <Check className="h-4 w-4 text-verified" /> : <Copy className="h-4 w-4" />}
-            </Button>
+      {newlyCreatedKey && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-card p-6 rounded-xl border border-border shadow-xl">
+            <h2 className="text-xl font-bold mb-2">Save your secret key</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Please save this secret key somewhere safe. For security reasons,{" "}
+              <strong>you won&apos;t be able to view it again</strong> through your
+              account. If you lose this key, you&apos;ll need to generate a new one.
+            </p>
+            <div className="p-3 bg-muted rounded-md border border-border flex items-center gap-3">
+              <code className="text-sm break-all flex-1 text-foreground">
+                {newlyCreatedKey}
+              </code>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => copyKey(newlyCreatedKey)}
+              >
+                {copiedKey === "new-key" ?
+                  <Check className="h-4 w-4 text-green-500" />
+                : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            <div className="flex justify-end pt-6">
+              <Button onClick={() => setNewlyCreatedKey(null)}>Done</Button>
+            </div>
           </div>
           <DialogFooter>
             <Button

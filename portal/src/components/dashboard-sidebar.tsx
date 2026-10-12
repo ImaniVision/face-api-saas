@@ -7,7 +7,6 @@ import {
   Aperture,
   Key,
   BarChart3,
-  BookOpen,
   PanelLeftClose,
   PanelLeft,
   X,
@@ -35,8 +34,7 @@ interface SidebarContentProps {
   isActive: (href: string) => boolean;
 }
 
-function SidebarContent({ collapsed, onToggle, onMobileClose, isActive }: SidebarContentProps) {
-  return (
+  const renderSidebarContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center justify-between border-b border-border px-4">
         <Link href="/dashboard" className="flex items-center gap-2.5">
@@ -112,23 +110,6 @@ function SidebarContent({ collapsed, onToggle, onMobileClose, isActive }: Sideba
           </div>
         </div>
       </nav>
-
-      {!collapsed && (
-        <div className="mx-3 mb-4 rounded-xl border border-border bg-mist/60 p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <BookOpen className="h-4 w-4 text-signal" /> New here?
-          </p>
-          <p className="mt-1 text-xs leading-relaxed text-ink/60">
-            Every docs example runs. Start with the quickstart.
-          </p>
-          <Link
-            href="/docs"
-            className="mt-3 block rounded-lg bg-navy px-3 py-2 text-center text-xs font-semibold text-white transition-colors hover:bg-navy/90"
-          >
-            Read the quickstart
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
@@ -152,7 +133,7 @@ export function DashboardSidebar({ collapsed, onToggle, mobileOpen, onMobileClos
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <SidebarContent collapsed={false} onToggle={onToggle} onMobileClose={onMobileClose} isActive={isActive} />
+        {renderSidebarContent()}
       </aside>
 
       <aside
@@ -161,7 +142,7 @@ export function DashboardSidebar({ collapsed, onToggle, mobileOpen, onMobileClos
           collapsed ? "w-[60px]" : "w-[240px]",
         )}
       >
-        <SidebarContent collapsed={collapsed} onToggle={onToggle} onMobileClose={onMobileClose} isActive={isActive} />
+        {renderSidebarContent()}
       </aside>
     </>
   );
