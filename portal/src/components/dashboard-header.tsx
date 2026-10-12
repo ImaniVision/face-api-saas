@@ -11,34 +11,30 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onMobileMenuToggle }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/40 bg-background/80 backdrop-blur-xl px-4 sm:px-6">
-      {/* Left: Mobile menu button */}
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-white/90 px-4 backdrop-blur-md sm:px-6">
       <div className="flex items-center gap-3">
         <button
           onClick={onMobileMenuToggle}
-          className="lg:hidden flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+          aria-label="Open menu"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-ink/60 transition-colors hover:bg-mist hover:text-ink lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
+        <span className="hidden font-mono text-xs text-ink/40 sm:block">Console</span>
       </div>
 
-      {/* Right: API Docs + Start Building + Avatar */}
       <div className="flex items-center gap-3">
         <Link
           href="/docs"
-          className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="hidden items-center gap-1.5 text-sm text-ink/60 transition-colors hover:text-ink sm:flex"
         >
           API Docs
           <ExternalLink className="h-3 w-3" />
         </Link>
 
-        <Link href="/dashboard/chat">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs font-medium border-border/60 hover:bg-accent/60"
-          >
-            Start building
+        <Link href="/dashboard/live-test">
+          <Button size="sm" className="bg-signal text-xs font-semibold text-white hover:bg-signal/90">
+            Live test
           </Button>
         </Link>
 

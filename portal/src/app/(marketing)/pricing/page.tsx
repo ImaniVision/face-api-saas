@@ -1,352 +1,120 @@
 import Link from "next/link";
-import { Check, Minus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Testimonials } from "@/components/marketing/testimonials";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
-const plans = [
+// No figures until unit economics are measured (§5.4). Prices stay unset.
+const rows = [
   {
-    name: "Free",
-    price: "$0",
-    period: "/mo",
-    description: "Billed annually",
-    features: [
-      "100 verifications/month",
-      "Basic face matching API",
-      "Community support",
-      "Standard analytics",
-      "Single API key",
-    ],
-    featured: false,
+    name: "Login verification",
+    body: "One passwordless check that a returning user is who they claim to be.",
   },
   {
-    name: "Pro",
-    price: "$49",
-    period: "/mo",
-    description: "Billed annually",
-    features: [
-      "10,000 verifications/month",
-      "Liveness detection included",
-      "Priority email & chat support",
-      "Advanced analytics dashboard",
-      "Multiple API keys & webhooks",
-    ],
-    featured: true,
+    name: "Transaction step-up",
+    body: "One face check inside a risky action, decided by risk signals.",
   },
   {
-    name: "Enterprise",
-    price: "$149",
-    period: "/mo",
-    description: "Billed annually",
-    features: [
-      "Unlimited verifications",
-      "Dedicated infrastructure",
-      "24/7 SLA with account manager",
-      "Predictive analytics & audit logs",
-      "Custom SLA & on-prem deployment",
-    ],
-    featured: false,
+    name: "Liveness check",
+    body: "One proof-of-liveness run, alone or attached to a verification.",
   },
 ];
 
-const comparisonFeatures = [
+const faqs = [
   {
-    category: "Verification",
-    features: [
-      {
-        name: "Face matching",
-        free: true,
-        pro: true,
-        enterprise: true,
-      },
-      {
-        name: "Document verification",
-        free: false,
-        pro: true,
-        enterprise: true,
-      },
-      {
-        name: "Liveness detection",
-        free: false,
-        pro: true,
-        enterprise: true,
-      },
-      {
-        name: "Deepfake detection",
-        free: false,
-        pro: false,
-        enterprise: true,
-      },
-    ],
+    q: "What counts as a check?",
+    a: "One API call to one endpoint: one login verification, one transaction step-up, or one liveness check. Retries caused by our errors never count.",
   },
   {
-    category: "Limits",
-    features: [
-      {
-        name: "Verifications/month",
-        free: "100",
-        pro: "10,000",
-        enterprise: "Unlimited",
-      },
-      {
-        name: "API keys",
-        free: "1",
-        pro: "5",
-        enterprise: "Unlimited",
-      },
-      {
-        name: "File uploads",
-        free: "Up to 5 MB",
-        pro: "Up to 25 MB",
-        enterprise: "Unlimited",
-      },
-      {
-        name: "Audit log retention",
-        free: "7 Days",
-        pro: "90 Days",
-        enterprise: "Unlimited",
-      },
-    ],
+    q: "Is sandbox usage free?",
+    a: "Sandbox access and pricing are confirmed when you talk to us. Nothing is billed before you agree a plan.",
   },
   {
-    category: "Analytics",
-    features: [
-      {
-        name: "Basic dashboard",
-        free: true,
-        pro: true,
-        enterprise: true,
-      },
-      {
-        name: "Advanced analytics",
-        free: false,
-        pro: true,
-        enterprise: true,
-      },
-      {
-        name: "Anomaly detection",
-        free: false,
-        pro: false,
-        enterprise: true,
-      },
-      {
-        name: "Custom reports",
-        free: false,
-        pro: false,
-        enterprise: true,
-      },
-    ],
-  },
-  {
-    category: "Support",
-    features: [
-      {
-        name: "Community forum",
-        free: true,
-        pro: true,
-        enterprise: true,
-      },
-      {
-        name: "Email support",
-        free: false,
-        pro: true,
-        enterprise: true,
-      },
-      {
-        name: "Dedicated account manager",
-        free: false,
-        pro: false,
-        enterprise: true,
-      },
-      {
-        name: "Custom SLA",
-        free: false,
-        pro: false,
-        enterprise: true,
-      },
-    ],
+    q: "Are there volume tiers?",
+    a: "Yes. Unit pricing falls as monthly volume rises. Talk to us about your expected volume and we will agree tiers up front.",
   },
 ];
-
-function FeatureValue({ value }: { value: boolean | string }) {
-  if (typeof value === "string") {
-    return <span className="text-sm text-muted-foreground">{value}</span>;
-  }
-  return value ?
-      <Check className="h-4 w-4 text-foreground" />
-    : <Minus className="h-4 w-4 text-muted-foreground/40" />;
-}
 
 export default function PricingPage() {
   return (
-    <div>
-      {/* Hero */}
-      <section className="pt-24 pb-16">
-        <div className="mx-auto max-w-[1200px] px-4 sm:px-6 text-center">
-          <p className="text-base font-medium text-muted-foreground mb-4">
-            Pricing
-          </p>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-foreground mb-6">
-            Simple pricing for your team
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Check out our different pricing plans.
+    <div className="bg-white">
+      <section className="bg-navy text-white">
+        <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 md:py-24">
+          <p className="max-w-3xl font-display text-display font-semibold leading-[1.05] tracking-tight">
+            Pay per check, not per seat.{" "}
+            <span className="text-white/55">
+              One price for each kind of check. No seats, no tiers of teammates.
+            </span>
           </p>
         </div>
       </section>
 
-      {/* Plan Cards */}
-      <section className="pb-24">
-        <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-          <div className="grid gap-8 md:grid-cols-3">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`rounded-3xl border p-8 transition-all ${
-                  plan.featured ?
-                    "border-foreground/20 bg-card shadow-2xl"
-                  : "border-border/40 bg-card/50"
-                }`}
-              >
-                <h3 className="text-xl font-semibold text-foreground">
-                  {plan.name}
-                </h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {plan.description}
-                </p>
-                <div className="mt-6 mb-8">
-                  <span className="text-4xl font-bold text-foreground">
-                    {plan.price}
-                  </span>
-                  <span className="text-base text-muted-foreground">
-                    {plan.period}
-                  </span>
-                </div>
-                <ul className="space-y-4 mb-8">
-                  {plan.features.map((f) => (
-                    <li
-                      key={f}
-                      className="flex items-start gap-3 text-base text-muted-foreground"
-                    >
-                      <Check className="h-5 w-5 shrink-0 text-foreground/80 mt-0.5" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/sign-up">
-                  <Button
-                    size="lg"
-                    className={`w-full h-12 text-base rounded-xl ${
-                      plan.featured ?
-                        "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : "bg-muted text-foreground hover:bg-muted/80"
-                    }`}
-                  >
-                    Get started
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Logo cloud text */}
-      <div className="border-y border-border/40 py-12 text-center">
-        <p className="text-base text-muted-foreground">
-          Join <span className="font-semibold text-foreground">500+</span>{" "}
-          companies already growing
-        </p>
-      </div>
-
-      {/* Comparison Table */}
-      <section className="py-24">
-        <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-          <h2 className="text-3xl font-bold text-foreground text-center mb-16">
-            Compare plans
-          </h2>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              {/* Table header */}
-              <thead>
-                <tr className="border-b border-border/40">
-                  <th className="py-6 px-6 text-left text-base font-normal text-muted-foreground w-[40%]"></th>
-                  {plans.map((plan) => (
-                    <th key={plan.name} className="py-6 px-6 text-center">
-                      <div className="text-lg font-semibold text-foreground">
-                        {plan.name}
-                      </div>
-                      <div className="text-2xl font-bold text-foreground mt-2">
-                        {plan.price}
-                        <span className="text-sm text-muted-foreground font-normal">
-                          {plan.period}
-                        </span>
-                      </div>
-                      <Link href="/sign-up" className="mt-4 block">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-9 px-4 text-xs border-border/60"
-                        >
-                          Get started
-                        </Button>
-                      </Link>
-                    </th>
-                  ))}
+      <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[560px]">
+            <thead>
+              <tr className="border-b border-border bg-mist/60 text-left">
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-ink/50">
+                  Check
+                </th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-ink/50">
+                  What it is
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-ink/50">
+                  Unit price
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {rows.map((r) => (
+                <tr key={r.name}>
+                  <td className="px-6 py-5 text-sm font-semibold text-ink">{r.name}</td>
+                  <td className="px-6 py-5 text-sm text-ink/65">{r.body}</td>
+                  <td className="px-6 py-5 text-right">
+                    <span className="inline-block rounded-md bg-amber/15 px-2.5 py-1 font-mono text-[11px] font-medium text-ink">
+                      to be set
+                    </span>
+                  </td>
                 </tr>
-              </thead>
-
-              {/* Table body */}
-              <tbody>
-                {comparisonFeatures.map((category) => (
-                  <>
-                    <tr
-                      key={category.category}
-                      className="border-b border-border/40"
-                    >
-                      <td
-                        colSpan={4}
-                        className="py-6 px-6 text-lg font-semibold text-foreground bg-muted/20"
-                      >
-                        {category.category}
-                      </td>
-                    </tr>
-                    {category.features.map((feature) => (
-                      <tr
-                        key={feature.name}
-                        className="border-b border-border/20 hover:bg-muted/20 transition-colors"
-                      >
-                        <td className="py-4 px-6 text-base text-muted-foreground">
-                          {feature.name}
-                        </td>
-                        <td className="py-4 px-6 text-center">
-                          <div className="flex justify-center">
-                            <FeatureValue value={feature.free} />
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 text-center">
-                          <div className="flex justify-center">
-                            <FeatureValue value={feature.pro} />
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 text-center">
-                          <div className="flex justify-center">
-                            <FeatureValue value={feature.enterprise} />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </section>
+        <p className="mt-4 text-sm text-ink/60">
+          Unit economics are still being measured, so no figures are published
+          yet. Talk to us about volume and we will agree pricing before you
+          integrate.
+        </p>
 
-      {/* Testimonials */}
-      <div className="border-t border-border/40">
-        <Testimonials />
+        <div className="mt-10 text-center">
+          <Link href="/contact">
+            <Button size="lg" className="h-12 bg-signal px-8 text-white hover:bg-signal/90">
+              Talk to us about volume <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+
+        <section className="mx-auto mt-16 max-w-3xl">
+          <h2 className="text-center font-display text-h2 font-semibold text-ink">
+            Pricing questions
+          </h2>
+          <Accordion type="single" collapsible className="mt-6 w-full">
+            {faqs.map((f, i) => (
+              <AccordionItem key={i} value={`item-${i}`} className="border-border">
+                <AccordionTrigger className="py-4 text-left text-sm font-medium text-ink hover:no-underline">
+                  {f.q}
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-sm leading-relaxed text-ink/65">
+                  {f.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </section>
       </div>
     </div>
   );

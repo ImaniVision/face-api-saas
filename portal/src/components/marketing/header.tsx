@@ -2,27 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
-import {
-  Scan,
-  ChevronDown,
-  Menu,
-  ShieldCheck,
-  ActivitySquare,
-  BarChart3,
-  Code2,
-  Fingerprint,
-  ScanFace,
-  LineChart,
-  Terminal,
-} from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -31,201 +14,108 @@ import {
 } from "@/components/ui/sheet";
 import { UserAvatar } from "@/components/user-avatar";
 
-const features = [
-  {
-    icon: ScanFace,
-    title: "Face Verification",
-    description: "1:1 identity verification with 99.7% accuracy",
-    href: "#verification",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Liveness Detection",
-    description: "Anti-spoofing with passive liveness checks",
-    href: "#liveness",
-  },
-  {
-    icon: LineChart,
-    title: "Analytics Dashboard",
-    description: "Real-time metrics and usage analytics",
-    href: "#analytics",
-  },
-  {
-    icon: Terminal,
-    title: "Developer SDKs",
-    description: "Python, Node.js, Go, and REST API",
-    href: "#sdks",
-  },
-];
-
+// §5.1 navigation
 const navLinks = [
+  { title: "Products", href: "/platform" },
+  { title: "Developers", href: "/docs" },
+  { title: "Security", href: "/security" },
   { title: "Pricing", href: "/pricing" },
-  { title: "Developers", href: "/dashboard" },
-  { title: "Changelog", href: "/changelog" },
+  { title: "About", href: "/about" },
 ];
-
-import Image from "next/image";
-import { ModeToggle } from "@/components/mode-toggle";
 
 export function Header() {
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group shrink-0">
-          <Image
-            src="/logo.svg"
-            alt="FaceAuth Logo"
-            width={32}
-            height={32}
-            className="h-8 w-8"
-          />
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            FaceAuth
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 sm:px-6">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <Image src="/logo.svg" alt="Imani Vision" width={28} height={28} className="h-7 w-7" />
+          <span className="font-display text-[17px] font-semibold tracking-tight text-ink">
+            Imani Vision
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden items-center gap-2 md:flex">
-          {/* Features Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="gap-1 text-base font-medium text-muted-foreground hover:text-foreground h-10 px-4"
-              >
-                Features
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[420px] p-4">
-              <div className="grid grid-cols-2 gap-2">
-                {features.map((feature) => (
-                  <DropdownMenuItem key={feature.title} asChild>
-                    <Link
-                      href={feature.href}
-                      className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-accent"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/60 bg-muted/50">
-                        <feature.icon className="h-4 w-4 text-foreground" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-foreground">
-                          {feature.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground leading-relaxed">
-                          {feature.description}
-                        </div>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
+        <nav className="hidden items-center gap-1 md:flex">
           {navLinks.map((link) => (
-            <Link key={link.title} href={link.href}>
-              <Button
-                variant="ghost"
-                className="text-base font-medium text-muted-foreground hover:text-foreground h-10 px-4"
-              >
-                {link.title}
-              </Button>
+            <Link
+              key={link.title}
+              href={link.href}
+              className="rounded-md px-3 py-2 text-sm font-medium text-ink/70 transition-colors hover:text-ink"
+            >
+              {link.title}
             </Link>
           ))}
         </nav>
 
-        {/* Right side */}
-        <div className="flex items-center gap-3">
-          <ModeToggle />
-          {!session ?
+        <div className="flex items-center gap-2">
+          {!session ? (
             <>
               <Link href="/sign-in" className="hidden sm:block">
-                <Button
-                  variant="ghost"
-                  className="text-base font-medium text-muted-foreground hover:text-foreground h-10 px-4"
-                >
-                  Log In
+                <Button variant="ghost" size="sm" className="text-sm font-medium">
+                  Sign in
                 </Button>
               </Link>
-              <Link href="/sign-up">
-                <Button className="text-base h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 font-medium rounded-lg">
-                  Get Started Today
+              <Link href="/contact">
+                <Button size="sm" className="bg-signal text-sm font-medium text-white hover:bg-signal/90">
+                  Talk to us
                 </Button>
               </Link>
             </>
-          : <>
+          ) : (
+            <>
               <Link href="/dashboard">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
+                <Button variant="ghost" size="sm" className="text-sm">
                   Dashboard
                 </Button>
               </Link>
               <UserAvatar />
             </>
-          }
+          )}
 
-          {/* Mobile menu */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-80">
-              <SheetTitle className="flex items-center gap-2 mb-6">
-                <Scan className="h-5 w-5" />
-                FaceAuth
+              <SheetTitle className="mb-6 flex items-center gap-2">
+                <Image src="/logo.svg" alt="Imani Vision" width={24} height={24} />
+                Imani Vision
               </SheetTitle>
               <nav className="flex flex-col gap-1">
-                <p className="px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Features
-                </p>
-                {features.map((feature) => (
-                  <Link
-                    key={feature.title}
-                    href={feature.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  >
-                    <feature.icon className="h-4 w-4" />
-                    {feature.title}
-                  </Link>
-                ))}
-                <div className="my-2 h-px bg-border/40" />
                 {navLinks.map((link) => (
                   <Link
                     key={link.title}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    className="rounded-lg px-3 py-2.5 text-sm text-ink/70 hover:bg-mist hover:text-ink"
                   >
                     {link.title}
                   </Link>
                 ))}
-                <div className="my-2 h-px bg-border/40" />
-                {!session && (
+                <div className="my-2 h-px bg-border" />
+                {!session ? (
                   <>
                     <Link
                       href="/sign-in"
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      className="rounded-lg px-3 py-2.5 text-sm text-ink/70 hover:bg-mist hover:text-ink"
                     >
-                      Log In
+                      Sign in
                     </Link>
-                    <Link href="/sign-up" onClick={() => setMobileOpen(false)}>
-                      <Button className="mt-2 w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                        Get Started Today
+                    <Link href="/contact" onClick={() => setMobileOpen(false)}>
+                      <Button className="mt-2 w-full bg-signal text-white hover:bg-signal/90">
+                        Talk to us
                       </Button>
                     </Link>
                   </>
+                ) : (
+                  <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                    <Button className="mt-2 w-full">Dashboard</Button>
+                  </Link>
                 )}
               </nav>
             </SheetContent>

@@ -1,74 +1,50 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
-const footerLinks = {
-  product: [
-    { label: "Features", href: "/#features" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "Changelog", href: "/changelog" },
-    { label: "Documentation", href: "#" },
-  ],
-  company: [
-    { label: "About", href: "#" },
-    { label: "Blog", href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Contact", href: "#" },
-  ],
-  legal: [
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
-    { label: "Cookie Policy", href: "#" },
-  ],
-};
+const columns = [
+  {
+    title: "Products",
+    links: [
+      { label: "Platform", href: "/platform" },
+      { label: "Security", href: "/security" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Compliance", href: "/compliance" },
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      { label: "Docs", href: "/docs" },
+      { label: "Quickstart", href: "/docs" },
+      { label: "Changelog", href: "/changelog" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+    ],
+  },
+];
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40">
-      {/* Newsletter Section */}
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16">
-        <div className="flex flex-col items-center text-center gap-6 mb-16">
-          <h3 className="text-2xl font-semibold text-foreground">
-            Stay Ahead with FaceAuth
-          </h3>
-          <p className="text-base text-muted-foreground max-w-md">
-            Join our newsletter for exclusive insights and updates on the latest
-            in facial recognition technology.
-          </p>
-          <div className="flex w-full max-w-sm gap-2">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              className="h-11 bg-muted/50 border-border/60"
-            />
-            <Button size="lg" className="h-11 px-8 shrink-0 font-medium">
-              Subscribe
-            </Button>
-          </div>
-        </div>
-
-        {/* Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="flex items-center gap-3 mb-6">
-              <Image
-                src="/logo.svg"
-                alt="FaceAuth Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8"
-              />
-              <span className="text-base font-bold text-foreground">
-                FaceAuth
+    <footer className="border-t border-border bg-white">
+      <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
+          <div className="col-span-2">
+            <Link href="/" className="flex items-center gap-2.5">
+              <Image src="/logo.svg" alt="Imani Vision" width={28} height={28} className="h-7 w-7" />
+              <span className="font-display text-base font-semibold text-ink">
+                Imani Vision
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed pr-8">
-              Enterprise-grade facial recognition infrastructure for modern
-              applications.
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink/60">
+              Facial verification for login, transactions, and routine liveness
+              checks. Verify continuously, store nothing recoverable.
             </p>
           </div>
           {/* Product */}
@@ -127,20 +103,14 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-16 flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-border/40">
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} FaceAuth Corp. All rights reserved.
+        <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-border pt-8 sm:flex-row sm:items-center">
+          <p className="text-sm text-ink/50">
+            © {new Date().getFullYear()} Imani Vision. All rights reserved.
           </p>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-foreground transition-colors">
-              Privacy
-            </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
-              Terms
-            </Link>
-          </div>
-        </div>
+          <p className="text-sm text-ink/50">
+            Imani means trust. We build the layer that keeps it.
+          </p>
+DF        </div>
       </div>
     </footer>
   );

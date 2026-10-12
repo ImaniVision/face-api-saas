@@ -1,8 +1,19 @@
 import Link from "next/link";
-import { ArrowRight, ChevronRight, Terminal } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FAQ } from "@/components/marketing/faq";
-import { ParticlesBg } from "@/components/marketing/particles-bg";
+import { HeroBlobs } from "@/components/marketing/hero-blobs";
+import { HeroCloser, WelcomeLoop } from "@/components/marketing/welcome-loop";
+import { TrustStrip } from "@/components/marketing/trust-strip";
+import { FaceIdScan } from "@/components/marketing/face-id-scan";
+import { BentoCard } from "@/components/marketing/bento-card";
+import {
+  CodeMock,
+  LivenessMock,
+  OnboardingMock,
+  PriceMock,
+  TemplateMock,
+  TransactionMock,
+} from "@/components/marketing/animated-mocks";
 
 const VERIFY_SNIPPET = `// 1:1 check: is this selfie the customer you enrolled?
 const form = new FormData();
@@ -21,118 +32,56 @@ const { match, confidence } = await res.json();`;
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen relative">
-      {/* Full-screen fixed particle background */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <ParticlesBg />
-      </div>
-
-      {/* Hero Section */}
-      <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-32 pb-24 mx-auto w-full max-w-7xl min-h-[calc(100vh-5rem)] md:px-6 md:pt-40 md:pb-32 lg:pt-48">
-        <div className="flex flex-col items-center text-center w-full">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-xs sm:text-sm border rounded-full text-muted-foreground border-border bg-background/50 backdrop-blur-md shadow-sm">
-            <span className="flex w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_2px_rgba(255,255,255,0.4)] dark:shadow-[0_0_10px_2px_rgba(255,255,255,0.8)]"></span>
-            1,254 happy customers
+    <div className="flex min-h-screen flex-col bg-white">
+      {/* Hero — horizontal text, everything visible in the first viewport */}
+      <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden bg-navy text-white">
+        <HeroBlobs />
+        <div className="relative mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6">
+          {/* Looping welcome line — letters from blue balls, glitter sparkles */}
+          <div className="mb-8">
+            <WelcomeLoop />
           </div>
-          <h1 className="max-w-4xl text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tighter text-foreground leading-[1.1] sm:leading-[1.1] md:leading-[1.05]">
-            Facial Recognition Infrastructure for Modern Apps
-          </h1>
-          <p className="max-w-2xl mt-6 sm:mt-8 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
-            FaceAuth is the developer-first facial verification API. Integrate
-            face matching, liveness detection, and identity analytics into your
-            application in minutes — not months.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 mt-8 sm:mt-10 w-full sm:w-auto px-4 sm:px-0">
-            <Link href="/sign-up" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full h-12 px-8 text-base shadow-sm"
-              >
-                Get Started for Free
-              </Button>
-            </Link>
-            <Link href="#features" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full h-12 px-8 text-base shadow-sm bg-background/50 backdrop-blur-sm"
-              >
-                Request Demo <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+          {/* Text row — headline left, continuation + CTAs right */}
+          <div className="grid items-end gap-5 lg:grid-cols-2 lg:gap-10">
+            <h1 className="font-display text-display font-semibold leading-[1.02] tracking-tight">
+              It&rsquo;s really you.{" "}
+              <span className="text-white/55">
+                And we can prove it without keeping your face.
+              </span>
+            </h1>
+            <div>
+              <p className="max-w-md text-body leading-relaxed text-white/60">
+                Imani Vision lets you add face-based login, transaction
+                step-up, and liveness checks to your product through an API. It
+                stores only templates that can&apos;t be turned back into a
+                face, and it discards raw images once the template is made.
+              </p>
+              <div className="mt-6 flex flex-row flex-wrap gap-4">
+                <Link href="/contact">
+                  <Button size="lg" className="h-14 px-9 text-base font-semibold text-white shadow-lg shadow-signal/30 bg-signal hover:bg-signal/90">
+                    Get started
+                  </Button>
+                </Link>
+                <Link href="/docs">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 border-white/25 bg-transparent px-9 text-base font-semibold text-white hover:bg-white/10 hover:text-white"
+                  >
+                    Read the docs
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative mt-10 pb-3">
+            <HeroCloser />
           </div>
         </div>
       </section>
 
-      {/* Feature & Code Section */}
-      <section
-        id="features"
-        className="relative z-10 py-16 sm:py-24 border-t border-border bg-background/80 backdrop-blur-md"
-      >
-        <div className="px-4 sm:px-6 mx-auto w-full max-w-7xl">
-          <div className="grid gap-16 lg:grid-cols-2 lg:gap-8 items-center">
-            {/* Text description */}
-            <div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
-                Integrate in minutes.
-              </h2>
-              <p className="mt-4 text-base sm:text-lg text-muted-foreground">
-                Powerful APIs and client SDKs that seamlessly integrate into
-                your existing authentication flows. Drop in our widget or build
-                entirely from scratch.
-              </p>
-
-              <div className="mt-10 space-y-8">
-                <div className="flex gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 border rounded-lg shrink-0 bg-background border-border">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">
-                      Liveness Detection
-                    </h3>
-                    <p className="mt-2 text-muted-foreground">
-                      Prevent spoofing attacks with active and passive liveness
-                      checks certified to iBeta Level 2 standards.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 border rounded-lg shrink-0 bg-background border-border">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">Face Matching</h3>
-                    <p className="mt-2 text-muted-foreground">
-                      Compare faces in milliseconds with 99.98% accuracy. Scales
-                      instantly to millions of identity records.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <TrustStrip />
 
             {/* Code snippet IDE mockup */}
             <div className="relative overflow-hidden border rounded-xl bg-zinc-950 border-zinc-800 shadow-2xl">
@@ -167,145 +116,91 @@ export default function HomePage() {
             Our API is designed for developers who want to ship fast and iterate
             quickly. Enroll, verify and delete with three plain HTTP calls.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto px-4 sm:px-0">
-            <Link href="/sign-up" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full h-12 px-8 text-base shadow-sm"
-              >
-                Start Building
-              </Button>
-            </Link>
-            <Link href="/docs" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full h-12 px-8 text-base gap-2 bg-background/50 backdrop-blur-sm shadow-sm"
-              >
-                Read the Docs <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
+          <div className="scroll-rise-stagger mt-10 grid gap-4 md:grid-cols-3">
+            {[
+              { step: "1", title: "Capture", body: "Collect a face at login or check time. Discard the image after the template is made." },
+              { step: "2", title: "Protect", body: "Scramble the face with a one-way transform. Store only the protected template." },
+              { step: "3", title: "Verify", body: "Compare each new check against the template. Revoke and reissue if it is ever exposed." },
+            ].map((s) => (
+              <div key={s.step} className="rounded-xl bg-white p-6">
+                <p className="font-mono text-caption text-signal">0{s.step}</p>
+                <h3 className="mt-2 font-display text-h3 font-semibold text-ink">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink/65">{s.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="relative z-10 py-16 sm:py-24 border-t border-border bg-background/95 backdrop-blur-xl">
-        <div className="px-4 sm:px-6 mx-auto w-full max-w-7xl">
-          <div className="mb-12 sm:mb-16 text-center">
-            <h2 className="mb-4 text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
-              Simple, transparent pricing
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
-              Start for free, scale when you need to.
+      {/* For developers */}
+      <section className="bg-navy text-white">
+        <div className="scroll-rise mx-auto grid max-w-[1200px] gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:items-center">
+          <div>
+            <p className="font-display text-h1 font-semibold leading-tight tracking-tight">
+              Three calls. One API.{" "}
+              <span className="text-white/55">
+                Add verification where your users already are, with versioned
+                endpoints and a sandbox to test against.
+              </span>
             </p>
+            <Link href="/docs" className="mt-6 inline-block">
+              <Button size="lg" className="h-12 bg-signal px-7 text-white hover:bg-signal/90">
+                Open the quickstart
+              </Button>
+            </Link>
           </div>
+          <div className="rounded-xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+            <p className="font-mono text-xs text-white/50">Illustrative request — endpoint and fields are placeholders</p>
+            <pre className="mt-3 overflow-x-auto font-mono text-[13px] leading-relaxed text-white">
+{`POST /v1/verify/transaction
+Authorization: Bearer sk_test_...
 
-          <div className="grid gap-6 sm:gap-8 md:grid-cols-3 max-w-5xl mx-auto align-top">
-            {/* Free */}
-            <div className="flex flex-col p-8 border rounded-2xl bg-background border-border">
-              <h3 className="text-xl font-semibold">Free</h3>
-              <p className="mt-2 text-muted-foreground">
-                For side projects and prototyping.
-              </p>
-              <div className="my-6">
-                <span className="text-4xl font-bold">$0</span>
-                <span className="text-muted-foreground">/mo</span>
-              </div>
-              <ul className="flex-1 space-y-4 text-sm text-foreground/80 mb-8">
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> 100
-                  verifications/month
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Basic face matching
-                  API
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Community Support
-                </li>
-              </ul>
-              <Button variant="outline" className="w-full">
-                Get Started
-              </Button>
-            </div>
-
-            {/* Pro - visually elevated */}
-            <div className="flex flex-col p-8 border-2 rounded-2xl bg-background border-foreground shadow-xl relative -mt-4 mb-4 md:-mt-4 md:mb-0">
-              <div className="absolute top-0 right-8 transform -translate-y-1/2">
-                <span className="bg-foreground text-background text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  Most Popular
-                </span>
-              </div>
-              <h3 className="text-xl font-semibold">Pro</h3>
-              <p className="mt-2 text-muted-foreground">
-                For scaling production applications.
-              </p>
-              <div className="my-6">
-                <span className="text-4xl font-bold">$49</span>
-                <span className="text-muted-foreground">/mo</span>
-              </div>
-              <ul className="flex-1 space-y-4 text-sm text-foreground/80 mb-8">
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> 10,000
-                  verifications/month
-                </li>
-                <li className="flex gap-3 text-foreground font-medium">
-                  <span className="text-foreground">✓</span> Liveness detection
-                  included
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Priority email
-                  support
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Advanced analytics
-                  dashboard
-                </li>
-              </ul>
-              <Button className="w-full text-primary-foreground bg-primary">
-                Start Free Trial
-              </Button>
-            </div>
-
-            {/* Enterprise */}
-            <div className="flex flex-col p-8 border rounded-2xl bg-background border-border">
-              <h3 className="text-xl font-semibold">Enterprise</h3>
-              <p className="mt-2 text-muted-foreground">
-                For mission-critical workloads.
-              </p>
-              <div className="my-6">
-                <span className="text-4xl font-bold">Custom</span>
-              </div>
-              <ul className="flex-1 space-y-4 text-sm text-foreground/80 mb-8">
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Unlimited
-                  verifications
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Dedicated
-                  infrastructure
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> 24/7 SLA with
-                  account manager
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-foreground">✓</span> Custom deployment
-                  options
-                </li>
-              </ul>
-              <Button variant="outline" className="w-full">
-                Contact Sales
-              </Button>
-            </div>
+{
+  "user_id": "usr_123",
+  "amount": 250000,
+  "currency": "NGN",
+  "risk_signals": {
+    "new_payee": true,
+    "device_changed": false
+  }
+}`}
+            </pre>
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="relative z-10 border-t border-border bg-background">
-        <FAQ />
+      {/* Security band */}
+      <section className="bg-white">
+        <div className="scroll-rise mx-auto max-w-[1200px] px-4 py-20 sm:px-6">
+          <p className="max-w-3xl font-display text-h1 font-semibold leading-tight tracking-tight text-ink">
+            We can&apos;t leak what we never store.{" "}
+            <span className="text-ink/50">
+              Face data is scrambled with a one-way transform before it is
+              saved, so a stolen database contains nothing an attacker can turn
+              back into a face.
+            </span>
+          </p>
+          <Link href="/security" className="mt-6 inline-flex items-center gap-1 font-medium text-signal">
+            Read how protection works <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Closing CTA */}
+      <section className="bg-navy text-white">
+        <div className="scroll-rise mx-auto max-w-[1200px] px-4 py-20 text-center sm:px-6">
+          <p className="mx-auto max-w-2xl font-display text-h1 font-semibold leading-tight tracking-tight">
+            Start verifying in minutes.{" "}
+            <span className="text-white/55">Talk to us about your first integration.</span>
+          </p>
+          <div className="mt-8 flex justify-center">
+            <Link href="/contact">
+              <Button size="lg" className="h-12 bg-signal px-8 text-white hover:bg-signal/90">
+                Get started
+              </Button>
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   );

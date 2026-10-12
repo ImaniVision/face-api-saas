@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ApiKeyEntry {
   id: string;
@@ -22,14 +30,15 @@ export default function ApiKeysPage() {
   const [apiKeys, setApiKeys] = useState<ApiKeyEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Create Key Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  // New Key Result Modal State
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const [revokeTarget, setRevokeTarget] = useState<ApiKeyEntry | null>(null);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -45,7 +54,7 @@ export default function ApiKeysPage() {
         const data = await res.json();
         setApiKeys(Array.isArray(data) ? data : []);
       }
-    } catch (e) {
+    } catch {
       toast.error("Failed to load API keys");
     } finally {
       setIsLoading(false);
@@ -74,66 +83,59 @@ export default function ApiKeysPage() {
         const body = await res.json().catch(() => null);
         toast.error(body?.message ?? "Failed to create key");
       }
-    } catch (e) {
+    } catch {
       toast.error("An error occurred");
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleRevoke = async (id: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to revoke this key? Any applications using it will stop working immediately.",
-      )
-    )
-      return;
+  const handleRevoke = async () => {
+    if (!revokeTarget) return;
+    setIsRevoking(true);
     try {
-      const res = await fetch(`/api/api-keys/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/api-keys/${revokeTarget.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Key revoked successfully");
+        setRevokeTarget(null);
         fetchKeys();
       } else {
         toast.error("Failed to revoke key");
       }
-    } catch (e) {
+    } catch {
       toast.error("An error occurred");
+    } finally {
+      setIsRevoking(false);
     }
   };
 
-  const copyKey = async (key: string, id: string = "new-key") => {
+  const copyKey = async (key: string) => {
     try {
       await navigator.clipboard.writeText(key);
-      setCopiedKey(id);
+      setCopied(true);
       toast.success("API key copied to clipboard");
-      setTimeout(() => setCopiedKey(null), 2000);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Failed to copy");
     }
   };
 
   return (
-    <div className="px-4 py-8 sm:px-6 lg:px-8 relative">
-      <div className="flex items-start justify-between mb-6">
+    <div className="relative px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="font-display text-h2 font-semibold tracking-tight text-ink">
             API keys
           </h1>
-          <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-            <p>
-              You have permission to view and manage all API keys in this
-              project.
-            </p>
-            <p>
-              Do not share your API key with others or expose it in the browser
-              or other client-side code.
-            </p>
+          <div className="mt-2 space-y-1 text-sm text-ink/60">
+            <p>Keys authenticate verification calls from your servers.</p>
+            <p>Never share a key or expose one in client-side code.</p>
           </div>
         </div>
 
         <Button
           size="sm"
-          className="gap-2 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
+          className="shrink-0 gap-2 bg-signal text-white hover:bg-signal/90"
           onClick={() => setIsCreateOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -141,38 +143,28 @@ export default function ApiKeysPage() {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border/40 overflow-hidden">
-        <table className="w-full">
+      <div className="overflow-x-auto rounded-xl border border-border bg-white">
+        <table className="w-full min-w-[640px]">
           <thead>
-            <tr className="border-b border-border/40 bg-muted/30">
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Name
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Secret Key
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Created
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Last Used
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Actions
-              </th>
+            <tr className="border-b border-border bg-mist/60">
+              {["Name", "Secret Key", "Created", "Last Used", ""].map((h, i) => (
+                <th
+                  key={i}
+                  className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-ink/45 ${i === 4 ? "text-right" : "text-left"}`}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/30">
-            {isLoading ?
+          <tbody className="divide-y divide-border/60">
+            {isLoading ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="p-8 text-center text-muted-foreground"
-                >
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                <td colSpan={5} className="p-8 text-center text-ink/50">
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                 </td>
               </tr>
-            : apiKeys.length === 0 ?
+            ) : apiKeys.length === 0 ? (
               <tr>
                 <td
                   colSpan={5}
@@ -182,75 +174,72 @@ export default function ApiKeysPage() {
                   one.
                 </td>
               </tr>
-            : apiKeys.map((key) => (
-                <tr
-                  key={key.id}
-                  className="group hover:bg-muted/20 transition-colors"
-                >
-                  <td className="px-4 py-3.5 text-sm font-medium text-foreground">
-                    {key.name}
-                  </td>
+            ) : (
+              apiKeys.map((key) => (
+                <tr key={key.id} className="transition-colors hover:bg-mist/40">
+                  <td className="px-4 py-3.5 text-sm font-medium text-ink">{key.name}</td>
                   <td className="px-4 py-3.5">
-                    <code className="font-mono text-sm text-muted-foreground">
-                      {key.prefix}...{key.lastFour}
+                    <code className="font-mono text-sm text-ink/55">
+                      {key.prefix}…{key.lastFour}
                     </code>
                   </td>
-                  <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                  <td className="px-4 py-3.5 text-sm text-ink/60">
                     {new Date(key.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3.5 text-sm text-muted-foreground">
-                    {key.lastUsedAt ?
-                      new Date(key.lastUsedAt).toLocaleDateString()
-                    : "Never"}
+                  <td className="px-4 py-3.5 text-sm text-ink/60">
+                    {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"}
                   </td>
-                  <td className="px-4 py-3.5">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => handleRevoke(key.id)}
-                        className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        title="Revoke Key"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+                  <td className="px-4 py-3.5 text-right">
+                    <button
+                      onClick={() => setRevokeTarget(key)}
+                      aria-label={`Revoke ${key.name}`}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-ink/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))
-            }
+            )}
           </tbody>
         </table>
       </div>
 
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-card p-6 rounded-xl border border-border shadow-xl">
-            <h2 className="text-xl font-bold mb-4">Create new secret key</h2>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g. Production API"
-                  value={newKeyName}
-                  onChange={(e) => setNewKeyName(e.target.value)}
-                  autoFocus
-                />
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreate} disabled={isCreating}>
-                  {isCreating && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create
-                </Button>
-              </div>
-            </div>
+      {/* Create dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="bg-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-ink">Create new secret key</DialogTitle>
+            <DialogDescription>
+              Name it after where it will be used, so a leak is easy to trace.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              placeholder="e.g. Production API"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            />
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={isCreating}
+              className="bg-signal text-white hover:bg-signal/90"
+            >
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {newlyCreatedKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -279,8 +268,42 @@ export default function ApiKeysPage() {
               <Button onClick={() => setNewlyCreatedKey(null)}>Done</Button>
             </div>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              onClick={() => setNewlyCreatedKey(null)}
+              className="bg-signal text-white hover:bg-signal/90"
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revoke confirm dialog */}
+      <Dialog open={revokeTarget !== null} onOpenChange={() => setRevokeTarget(null)}>
+        <DialogContent className="bg-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-ink">Revoke {revokeTarget?.name}?</DialogTitle>
+            <DialogDescription>
+              Applications using this key stop working immediately. This cannot
+              be undone — you would create a new key instead.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRevokeTarget(null)}>
+              Keep key
+            </Button>
+            <Button
+              onClick={handleRevoke}
+              disabled={isRevoking}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {isRevoking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Revoke key
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

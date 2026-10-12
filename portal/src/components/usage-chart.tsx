@@ -47,7 +47,7 @@ export function UsageChart({ byDay, windowDays, totalCalls }: UsageChartProps) {
   const data = fillDays(byDay, windowDays);
 
   return (
-    <Card className="border-border/40 bg-card/80 backdrop-blur-sm">
+    <Card className="border-border bg-white">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -73,33 +73,25 @@ export function UsageChart({ byDay, windowDays, totalCalls }: UsageChartProps) {
             >
               <defs>
                 <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="hsl(263, 70%, 55%)"
-                    stopOpacity={0.4}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="hsl(263, 70%, 55%)"
-                    stopOpacity={0}
-                  />
+                  <stop offset="0%" stopColor="#1E4FFF" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#1E4FFF" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(0, 0%, 20%)"
+                stroke="#E3E7F0"
                 vertical={false}
               />
               <XAxis
                 dataKey="day"
-                stroke="hsl(0, 0%, 45%)"
+                stroke="#8A94A8"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
                 minTickGap={24}
               />
               <YAxis
-                stroke="hsl(0, 0%, 45%)"
+                stroke="#8A94A8"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
@@ -107,18 +99,18 @@ export function UsageChart({ byDay, windowDays, totalCalls }: UsageChartProps) {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 12%)",
-                  border: "1px solid hsl(0, 0%, 20%)",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #E3E7F0",
                   borderRadius: "8px",
                   fontSize: "13px",
-                  color: "hsl(0, 0%, 90%)",
+                  color: "#1A1D29",
                 }}
-                labelStyle={{ color: "hsl(0, 0%, 60%)" }}
+                labelStyle={{ color: "#5B6478" }}
               />
               <Area
                 type="monotone"
                 dataKey="calls"
-                stroke="hsl(263, 70%, 55%)"
+                stroke="#1E4FFF"
                 strokeWidth={2.5}
                 fill="url(#colorCalls)"
               />

@@ -36,11 +36,11 @@ export function CameraPermissionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-border/40 bg-card/95 backdrop-blur-xl supports-backdrop-filter:bg-card/75">
+      <DialogContent className="border-border bg-white sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20">
-              <Camera className="h-5 w-5 text-fuchsia-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-signal/20 bg-signal/[0.07]">
+              <Camera className="h-5 w-5 text-signal" />
             </div>
             <DialogTitle className="text-xl">
               Biometric Scan Consent
@@ -80,14 +80,14 @@ export function CameraPermissionModal({
                 By ticking this box, you agree to our{" "}
                 <Link
                   href="/privacy"
-                  className="text-fuchsia-400 hover:text-fuchsia-300 underline underline-offset-2 transition-colors"
+                  className="text-signal underline underline-offset-2 transition-colors hover:text-signal/80"
                 >
                   Privacy Policy
                 </Link>{" "}
                 and{" "}
                 <Link
                   href="/terms"
-                  className="text-fuchsia-400 hover:text-fuchsia-300 underline underline-offset-2 transition-colors"
+                  className="text-signal underline underline-offset-2 transition-colors hover:text-signal/80"
                 >
                   Terms of Service
                 </Link>
@@ -108,7 +108,7 @@ export function CameraPermissionModal({
           </Button>
           <Button
             type="button"
-            className="w-full sm:w-auto bg-linear-to-r from-fuchsia-600 to-violet-600 text-white shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40 transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-signal text-white hover:bg-signal/90 sm:w-auto"
             disabled={!hasConsented}
             onClick={handleAllowCamera}
           >

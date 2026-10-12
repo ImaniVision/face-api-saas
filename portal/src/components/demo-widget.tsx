@@ -63,6 +63,7 @@ export function DemoWidget() {
     if (imageSrc) {
       setCapturedImage(imageSrc);
       setResult(null);
+      setLatencyMs(null);
       setError(null);
     }
   }, []);
@@ -70,6 +71,7 @@ export function DemoWidget() {
   const reset = () => {
     setCapturedImage(null);
     setResult(null);
+    setLatencyMs(null);
     setError(null);
   };
 
@@ -78,6 +80,7 @@ export function DemoWidget() {
     setError(null);
     setResult(null);
 
+    const started = performance.now();
     try {
       let body: FormData | undefined;
       if (action !== "delete" && capturedImage) {
@@ -112,63 +115,59 @@ export function DemoWidget() {
   const isBusy = pending !== null;
 
   return (
-    <Card className="overflow-hidden border-border/40 bg-card/80 backdrop-blur-sm">
+    <Card className="overflow-hidden border-border bg-white">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Aperture className="h-5 w-5 text-fuchsia-400" />
+            <CardTitle className="flex items-center gap-2 text-lg text-ink">
+              <Aperture className="h-5 w-5 text-signal" />
               Live Verification Demo
             </CardTitle>
             <CardDescription className="mt-1">
               Enroll your own face, then verify a new selfie against it (1:1)
             </CardDescription>
           </div>
-          <Badge
-            variant="outline"
-            className="border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-400"
-          >
+          <Badge variant="outline" className="border-signal/30 bg-signal/[0.07] text-signal">
             Interactive
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Camera / Captured Image */}
-        <div className="relative overflow-hidden rounded-lg border border-border/40 bg-black/50">
-          {!capturedImage ?
-            isCameraAllowed ?
+        <div className="relative overflow-hidden rounded-xl border border-border bg-navy">
+          {!capturedImage ? (
+            isCameraAllowed ? (
               <Webcam
                 ref={webcamRef}
                 audio={false}
                 screenshotFormat="image/jpeg"
-                videoConstraints={{
-                  width: 640,
-                  height: 480,
-                  facingMode: "user",
-                }}
+                videoConstraints={{ width: 640, height: 480, facingMode: "user" }}
                 className="w-full"
                 mirrored
               />
-            : <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px] h-full bg-black/40">
-                <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center mb-4 border border-border/50">
-                  <ShieldAlert className="h-8 w-8 text-fuchsia-400/80" />
+            ) : (
+              <div className="flex min-h-[300px] h-full flex-col items-center justify-center bg-navy p-8 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-white/[0.06]">
+                  <ShieldAlert className="h-8 w-8 text-amber" />
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">
+                <h3 className="mb-2 text-lg font-medium text-white">
                   Camera Access Required
                 </h3>
-                <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                  We need your permission to use the camera for secure facial
+                <p className="mb-6 max-w-xs text-sm text-white/60">
+                  We need your permission to use the camera for facial
                   verification.
                 </p>
                 <Button
                   onClick={() => setIsModalOpen(true)}
-                  variant="secondary"
-                  className="bg-muted hover:bg-muted/80 text-foreground"
+                  className="bg-signal text-white hover:bg-signal/90"
                 >
                   <Camera className="mr-2 h-4 w-4" />
                   Grant Permission
                 </Button>
               </div>
+            )
+          ) : (
+            <img src={capturedImage} alt="Captured selfie" className="w-full" />
+          )}
 
           : <img src={capturedImage} alt="Captured selfie" className="w-full" />
           }
@@ -208,12 +207,13 @@ export function DemoWidget() {
           {!capturedImage ?
             <Button
               onClick={isCameraAllowed ? capture : () => setIsModalOpen(true)}
-              className="flex-1 gap-2 bg-linear-to-r from-fuchsia-600 to-pink-600 text-white shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40 transition-all hover:brightness-110"
+              className="flex-1 bg-signal text-white hover:bg-signal/90"
             >
-              <Camera className="h-4 w-4" />
+              <Camera className="mr-2 h-4 w-4" />
               {isCameraAllowed ? "Capture Selfie" : "Enable Camera"}
             </Button>
-          : <>
+          ) : (
+            <>
               <Button
                 onClick={() => run("enroll")}
                 disabled={isBusy || !hasConsent}
@@ -245,7 +245,7 @@ export function DemoWidget() {
                 Retake
               </Button>
             </>
-          }
+          )}
         </div>
         <button
           type="button"
@@ -260,10 +260,10 @@ export function DemoWidget() {
         {/* Result Display */}
         {result?.kind === "verified" && (
           <div
-            className={`rounded-lg border p-4 ${
-              result.match ?
-                "border-green-500/30 bg-green-500/10"
-              : "border-red-500/30 bg-red-500/10"
+            className={`rounded-xl border p-4 ${
+              result.match
+                ? "border-verified/30 bg-verified/[0.07]"
+                : "border-destructive/30 bg-destructive/[0.05]"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -271,9 +271,7 @@ export function DemoWidget() {
                 <CheckCircle2 className="h-5 w-5 text-green-400" />
               : <XCircle className="h-5 w-5 text-red-400" />}
               <span
-                className={`font-semibold ${
-                  result.match ? "text-green-400" : "text-red-400"
-                }`}
+                className={`font-semibold ${result.match ? "text-verified" : "text-destructive"}`}
               >
                 {result.match ? "Match" : "No Match"}
               </span>
@@ -305,9 +303,8 @@ export function DemoWidget() {
           </div>
         )}
 
-        {/* Error Display */}
         {error && (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/[0.05] p-4">
             <div className="flex items-center gap-2">
               <XCircle className="h-5 w-5 shrink-0 text-red-400" />
               <span className="text-sm text-red-400">{error}</span>
