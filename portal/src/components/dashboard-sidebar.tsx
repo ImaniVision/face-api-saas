@@ -34,7 +34,8 @@ interface SidebarContentProps {
   isActive: (href: string) => boolean;
 }
 
-  const renderSidebarContent = () => (
+function SidebarContent({ collapsed, onToggle, onMobileClose, isActive }: SidebarContentProps) {
+  return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center justify-between border-b border-border px-4">
         <Link href="/dashboard" className="flex items-center gap-2.5">
@@ -133,7 +134,7 @@ export function DashboardSidebar({ collapsed, onToggle, mobileOpen, onMobileClos
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        {renderSidebarContent()}
+        <SidebarContent collapsed={false} onToggle={onToggle} onMobileClose={onMobileClose} isActive={isActive} />
       </aside>
 
       <aside
@@ -142,7 +143,7 @@ export function DashboardSidebar({ collapsed, onToggle, mobileOpen, onMobileClos
           collapsed ? "w-[60px]" : "w-[240px]",
         )}
       >
-        {renderSidebarContent()}
+        <SidebarContent collapsed={collapsed} onToggle={onToggle} onMobileClose={onMobileClose} isActive={isActive} />
       </aside>
     </>
   );
