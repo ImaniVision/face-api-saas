@@ -242,8 +242,19 @@ export default function ApiKeysPage() {
       </Dialog>
 
       {/* Reveal dialog */}
-      <Dialog open={newlyCreatedKey !== null} onOpenChange={() => setNewlyCreatedKey(null)}>
-        <DialogContent className="bg-white sm:max-w-md">
+      {/* The key is shown once, so only the Done button may dismiss this dialog. */}
+      <Dialog
+        open={newlyCreatedKey !== null}
+        onOpenChange={(open) => {
+          if (!open) setNewlyCreatedKey(null);
+        }}
+      >
+        <DialogContent
+          className="bg-white sm:max-w-md"
+          showCloseButton={false}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-ink">Save your secret key</DialogTitle>
             <DialogDescription>
