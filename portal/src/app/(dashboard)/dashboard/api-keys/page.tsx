@@ -25,6 +25,18 @@ interface ApiKeyEntry {
   lastUsedAt: string | null;
 }
 
+async function loadKeys(): Promise<ApiKeyEntry[] | null> {
+  try {
+    const res = await fetch("/api/api-keys");
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    toast.error("Failed to load API keys");
+    return null;
+  }
+}
+
 export default function ApiKeysPage() {
   const { data: session } = useSession();
   const [apiKeys, setApiKeys] = useState<ApiKeyEntry[]>([]);
@@ -41,24 +53,21 @@ export default function ApiKeysPage() {
   const [isRevoking, setIsRevoking] = useState(false);
 
   useEffect(() => {
-    if (session?.user) {
-      fetchKeys();
-    }
+    if (!session?.user) return;
+    let ignore = false;
+    loadKeys().then((keys) => {
+      if (ignore) return;
+      if (keys) setApiKeys(keys);
+      setIsLoading(false);
+    });
+    return () => {
+      ignore = true;
+    };
   }, [session]);
 
-  const fetchKeys = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/api-keys");
-      if (res.ok) {
-        const data = await res.json();
-        setApiKeys(Array.isArray(data) ? data : []);
-      }
-    } catch {
-      toast.error("Failed to load API keys");
-    } finally {
-      setIsLoading(false);
-    }
+  const refreshKeys = async () => {
+    const keys = await loadKeys();
+    if (keys) setApiKeys(keys);
   };
 
   const handleCreate = async () => {
@@ -78,7 +87,7 @@ export default function ApiKeysPage() {
         setNewlyCreatedKey(data.plainTextKey);
         setIsCreateOpen(false);
         setNewKeyName("");
-        fetchKeys();
+        refreshKeys();
       } else {
         const body = await res.json().catch(() => null);
         toast.error(body?.message ?? "Failed to create key");
@@ -98,7 +107,7 @@ export default function ApiKeysPage() {
       if (res.ok) {
         toast.success("Key revoked successfully");
         setRevokeTarget(null);
-        fetchKeys();
+        refreshKeys();
       } else {
         toast.error("Failed to revoke key");
       }
