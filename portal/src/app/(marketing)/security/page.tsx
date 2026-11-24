@@ -4,16 +4,22 @@ import { Button } from "@/components/ui/button";
 
 const attacks = [
   {
+    name: "Template inversion",
+    body: "Rebuilding a face from a stolen template. Mitigated with IronMask (SHA-256 hash + random 512×512 8-bit rotation); brute-force recovery is estimated at ~2^91 guesses.",
+    status: "implemented (IronMask)",
+    implemented: true,
+  },
+  {
     name: "Presentation attacks",
-    body: "Photos, screens, and masks held up to the camera. Tested with a liveness check on every verification.",
+    body: "Printed photos or screens held up to the camera. Not blocked yet — a good printed photo could pass. Liveness detection is planned future work.",
+    status: "planned (not built yet)",
+    implemented: false,
   },
   {
     name: "Deepfakes",
-    body: "AI-swapped faces and synthetic video. Tested against current generation methods.",
-  },
-  {
-    name: "Template inversion",
-    body: "Rebuilding a face from a stolen template. Tested by attempting reversal of stored templates.",
+    body: "AI-swapped faces and synthetic video. Not detected yet — planned future work after core verification.",
+    status: "planned (not built yet)",
+    implemented: false,
   },
 ];
 
@@ -78,22 +84,29 @@ export default function SecurityPage() {
           </div>
         </section>
 
-        {/* Attack resistance — what is tested, no results claimed */}
+        {/* Threat coverage — honest about what is built vs planned */}
         <section>
           <h2 className="font-display text-h2 font-semibold text-ink">
-            Tested against the attacks that matter.
+            What is protected today — and what is not yet.
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink/60">
-            Each class below is covered by the evaluation. Results appear here
-            when the evaluation produces them — not before.
+            Template protection is implemented now. Presentation-attack and
+            deepfake defences are not built yet, so use the API alongside your
+            own controls where spoofing is a risk.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {attacks.map((a) => (
               <div key={a.name} className="rounded-xl border border-border p-6">
                 <h3 className="font-display text-h3 font-semibold text-ink">{a.name}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink/65">{a.body}</p>
-                <p className="mt-4 inline-block rounded-md bg-amber/15 px-2.5 py-1 font-mono text-[11px] font-medium text-ink">
-                  evaluation in progress
+                <p
+                  className={`mt-4 inline-block rounded-md px-2.5 py-1 font-mono text-[11px] font-medium ${
+                    a.implemented
+                      ? "bg-verified/15 text-verified"
+                      : "bg-amber/15 text-ink"
+                  }`}
+                >
+                  {a.status}
                 </p>
               </div>
             ))}
