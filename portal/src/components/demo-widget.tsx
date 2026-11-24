@@ -63,7 +63,6 @@ export function DemoWidget() {
     if (imageSrc) {
       setCapturedImage(imageSrc);
       setResult(null);
-      setLatencyMs(null);
       setError(null);
     }
   }, []);
@@ -71,7 +70,6 @@ export function DemoWidget() {
   const reset = () => {
     setCapturedImage(null);
     setResult(null);
-    setLatencyMs(null);
     setError(null);
   };
 
@@ -169,9 +167,6 @@ export function DemoWidget() {
             <img src={capturedImage} alt="Captured selfie" className="w-full" />
           )}
 
-          : <img src={capturedImage} alt="Captured selfie" className="w-full" />
-          }
-
           {/* Scanning overlay animation */}
           {isBusy && pending !== "delete" && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
@@ -204,7 +199,7 @@ export function DemoWidget() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
-          {!capturedImage ?
+          {!capturedImage ? (
             <Button
               onClick={isCameraAllowed ? capture : () => setIsModalOpen(true)}
               className="flex-1 bg-signal text-white hover:bg-signal/90"
