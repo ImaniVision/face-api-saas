@@ -7,16 +7,19 @@ const attacks = [
     name: "Template inversion",
     body: "Rebuilding a face from a stolen template. Mitigated with IronMask (SHA-256 hash + random 512×512 8-bit rotation); brute-force recovery is estimated at ~2^91 guesses.",
     status: "implemented (IronMask)",
+    implemented: true,
   },
   {
     name: "Presentation attacks",
     body: "Printed photos or screens held up to the camera. Not blocked yet — a good printed photo could pass. Liveness detection is planned future work.",
     status: "planned (not built yet)",
+    implemented: false,
   },
   {
     name: "Deepfakes",
     body: "AI-swapped faces and synthetic video. Not detected yet — planned future work after core verification.",
     status: "planned (not built yet)",
+    implemented: false,
   },
 ];
 
@@ -96,7 +99,13 @@ export default function SecurityPage() {
               <div key={a.name} className="rounded-xl border border-border p-6">
                 <h3 className="font-display text-h3 font-semibold text-ink">{a.name}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink/65">{a.body}</p>
-                <p className="mt-4 inline-block rounded-md bg-amber/15 px-2.5 py-1 font-mono text-[11px] font-medium text-ink">
+                <p
+                  className={`mt-4 inline-block rounded-md px-2.5 py-1 font-mono text-[11px] font-medium ${
+                    a.implemented
+                      ? "bg-verified/15 text-verified"
+                      : "bg-amber/15 text-ink"
+                  }`}
+                >
                   {a.status}
                 </p>
               </div>

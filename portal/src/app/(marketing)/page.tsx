@@ -198,7 +198,7 @@ export default function HomePage() {
 → 200 OK
 {
   "status": "face_required",
-  "reasons": ["amount_over_limit"]
+  "reasons": ["amount_over_limit", "new_payee", "new_device"]
 }`}
             </pre>
           </div>

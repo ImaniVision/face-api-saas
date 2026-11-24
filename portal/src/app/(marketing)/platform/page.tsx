@@ -63,8 +63,9 @@ export default function PlatformPage() {
 
 → 200 OK
 {
-  "enrolled": true,
-  "consentGrantedAt": "2026-10-05T12:00:00.000Z"
+  "externalId": "customer-42",
+  "consentId": "3f2c…",
+  "consentGrantedAt": "2026-10-03T14:07:12.000Z"
 }`}
         />
 
@@ -95,7 +96,7 @@ export default function PlatformPage() {
 → 200 OK
 {
   "status": "face_required",
-  "reasons": ["amount_over_limit"]
+  "reasons": ["amount_over_limit", "new_payee", "new_device"]
 }`}
         />
 

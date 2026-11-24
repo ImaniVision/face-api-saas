@@ -27,7 +27,7 @@ const rows = [
 const faqs = [
   {
     q: "What counts as a check?",
-    a: "One API call to enroll, verify, or evaluate a transaction. Retries caused by our errors never count.",
+    a: "One authenticated API call to enroll, verify, or evaluate a transaction. During the beta nothing is billed, and the usage log records every call with its status code.",
   },
   {
     q: "Can I test before integrating?",
