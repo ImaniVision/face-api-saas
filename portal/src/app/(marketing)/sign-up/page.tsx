@@ -34,6 +34,11 @@ export default function SignUpPage() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
