@@ -14,7 +14,7 @@ export default function PrivacyPage() {
 
       <div
         role="note"
-        className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200"
+        className="rounded-lg border border-amber/40 bg-amber/[0.08] p-4 text-sm text-ink"
       >
         <strong>Draft.</strong> This describes how the beta handles data today. It has not been
         reviewed by a lawyer. Before public launch it needs the operator&apos;s legal name, a contact

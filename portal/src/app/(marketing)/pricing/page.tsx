@@ -1,99 +1,121 @@
 import Link from "next/link";
-import { Check, Minus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
-const included = [
-  "Enroll, verify and delete people over the REST API",
-  "Protected templates: no stored record can be turned back into a face",
-  "60 calls a minute per API key, bursts of up to 20",
-  "As many API keys as you need, each revocable",
-  "Usage dashboard: calls per day and per key, last 30 days",
-  "Live Test in the dashboard to try it on your own face",
-  "Consent recorded at enrollment, one call to delete a person",
+// No figures until unit economics are measured (§5.4). Prices stay unset.
+const rows = [
+  {
+    name: "Login verification",
+    body: "One passwordless check that a returning user is who they claim to be.",
+  },
+  {
+    name: "Transaction step-up",
+    body: "One face check inside a risky action, decided by risk signals.",
+  },
+  {
+    name: "Liveness check",
+    body: "One proof-of-liveness run, alone or attached to a verification.",
+  },
 ];
 
-const notYet = [
-  "Liveness or spoof detection",
-  "Paid plans and billing",
-  "Client SDKs (use any HTTP client)",
-  "Webhooks",
-  "An uptime commitment or SLA",
+const faqs = [
+  {
+    q: "What counts as a check?",
+    a: "One API call to one endpoint: one login verification, one transaction step-up, or one liveness check. Retries caused by our errors never count.",
+  },
+  {
+    q: "Is sandbox usage free?",
+    a: "Sandbox access and pricing are confirmed when you talk to us. Nothing is billed before you agree a plan.",
+  },
+  {
+    q: "Are there volume tiers?",
+    a: "Yes. Unit pricing falls as monthly volume rises. Talk to us about your expected volume and we will agree tiers up front.",
+  },
 ];
 
 export default function PricingPage() {
   return (
-    <div>
-      {/* Hero */}
-      <section className="pt-24 pb-16">
-        <div className="mx-auto max-w-[1200px] px-4 sm:px-6 text-center">
-          <p className="text-base font-medium text-muted-foreground mb-4">
-            Pricing
-          </p>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-foreground mb-6">
-            Free during the beta
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            We count every call per API key, so paid plans can be added once
-            billing exists. Until then there is one plan, and it costs nothing.
+    <div className="bg-white">
+      <section className="bg-navy text-white">
+        <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 md:py-24">
+          <p className="max-w-3xl font-display text-display font-semibold leading-[1.05] tracking-tight">
+            Pay per check, not per seat.{" "}
+            <span className="text-white/55">
+              One price for each kind of check. No seats, no tiers of teammates.
+            </span>
           </p>
         </div>
       </section>
 
-      {/* Plan */}
-      <section className="pb-24">
-        <div className="mx-auto max-w-[1000px] px-4 sm:px-6">
-          <div className="grid gap-8 md:grid-cols-2">
-            <div className="rounded-3xl border border-foreground/20 bg-card p-8 shadow-2xl">
-              <h3 className="text-xl font-semibold text-foreground">Beta</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                Requires a verified email address.
-              </p>
-              <div className="mt-6 mb-8">
-                <span className="text-4xl font-bold text-foreground">$0</span>
-              </div>
-              <ul className="space-y-4 mb-8">
-                {included.map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-3 text-base text-muted-foreground"
-                  >
-                    <Check className="h-5 w-5 shrink-0 text-foreground/80 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/sign-up">
-                <Button
-                  size="lg"
-                  className="w-full h-12 text-base rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  Get an API key
-                </Button>
-              </Link>
-            </div>
-
-            <div className="rounded-3xl border border-border/40 bg-card/50 p-8">
-              <h3 className="text-xl font-semibold text-foreground">
-                Not available yet
-              </h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                On the roadmap. Don&apos;t build on any of these today.
-              </p>
-              <ul className="space-y-4 mt-8">
-                {notYet.map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-3 text-base text-muted-foreground"
-                  >
-                    <Minus className="h-5 w-5 shrink-0 text-muted-foreground/60 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+      <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[560px]">
+            <thead>
+              <tr className="border-b border-border bg-mist/60 text-left">
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-ink/50">
+                  Check
+                </th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-ink/50">
+                  What it is
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-ink/50">
+                  Unit price
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {rows.map((r) => (
+                <tr key={r.name}>
+                  <td className="px-6 py-5 text-sm font-semibold text-ink">{r.name}</td>
+                  <td className="px-6 py-5 text-sm text-ink/65">{r.body}</td>
+                  <td className="px-6 py-5 text-right">
+                    <span className="inline-block rounded-md bg-amber/15 px-2.5 py-1 font-mono text-[11px] font-medium text-ink">
+                      to be set
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </section>
+        <p className="mt-4 text-sm text-ink/60">
+          Unit economics are still being measured, so no figures are published
+          yet. Talk to us about volume and we will agree pricing before you
+          integrate.
+        </p>
+
+        <div className="mt-10 text-center">
+          <Link href="/contact">
+            <Button size="lg" className="h-12 bg-signal px-8 text-white hover:bg-signal/90">
+              Talk to us about volume <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+
+        <section className="mx-auto mt-16 max-w-3xl">
+          <h2 className="text-center font-display text-h2 font-semibold text-ink">
+            Pricing questions
+          </h2>
+          <Accordion type="single" collapsible className="mt-6 w-full">
+            {faqs.map((f, i) => (
+              <AccordionItem key={i} value={`item-${i}`} className="border-border">
+                <AccordionTrigger className="py-4 text-left text-sm font-medium text-ink hover:no-underline">
+                  {f.q}
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-sm leading-relaxed text-ink/65">
+                  {f.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </section>
+      </div>
     </div>
   );
 }

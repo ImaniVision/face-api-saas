@@ -14,7 +14,7 @@ export default function TermsPage() {
 
       <div
         role="note"
-        className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200"
+        className="rounded-lg border border-amber/40 bg-amber/[0.08] p-4 text-sm text-ink"
       >
         <strong>Draft, not in force.</strong> Nobody has agreed to these terms and they don&apos;t bind
         anyone yet. Before launch they need the operator&apos;s legal name, a contact address, a

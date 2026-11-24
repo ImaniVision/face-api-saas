@@ -1,197 +1,243 @@
 import Link from "next/link";
-import { ArrowRight, ChevronRight, ShieldCheck, Target, Terminal } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FAQ } from "@/components/marketing/faq";
-import { ParticlesBg } from "@/components/marketing/particles-bg";
-
-const VERIFY_SNIPPET = `// 1:1 check: is this selfie the customer you enrolled?
-const form = new FormData();
-form.append("image", selfie);
-
-const res = await fetch(
-  \`\${process.env.IMANI_API_URL}/v1/subjects/customer_123/verify\`,
-  {
-    method: "POST",
-    headers: { "x-api-key": process.env.IMANI_API_KEY },
-    body: form,
-  },
-);
-
-const { match } = await res.json();`;
+import { HeroBlobs } from "@/components/marketing/hero-blobs";
+import { HeroCloser, WelcomeLoop } from "@/components/marketing/welcome-loop";
+import { TrustStrip } from "@/components/marketing/trust-strip";
+import { FaceIdScan } from "@/components/marketing/face-id-scan";
+import { BentoCard } from "@/components/marketing/bento-card";
+import {
+  CodeMock,
+  LivenessMock,
+  OnboardingMock,
+  PriceMock,
+  TemplateMock,
+  TransactionMock,
+} from "@/components/marketing/animated-mocks";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen relative">
-      {/* Full-screen fixed particle background */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <ParticlesBg />
-      </div>
-
-      {/* Hero Section */}
-      <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-32 pb-24 mx-auto w-full max-w-7xl min-h-[calc(100vh-5rem)] md:px-6 md:pt-40 md:pb-32 lg:pt-48">
-        <div className="flex flex-col items-center text-center w-full">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-xs sm:text-sm border rounded-full text-muted-foreground border-border bg-background/50 backdrop-blur-md shadow-sm">
-            <span className="flex w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_2px_rgba(255,255,255,0.4)] dark:shadow-[0_0_10px_2px_rgba(255,255,255,0.8)]"></span>
-            Beta: free while we test it
+    <div className="flex min-h-screen flex-col bg-white">
+      {/* Hero — horizontal text, everything visible in the first viewport */}
+      <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden bg-navy text-white">
+        <HeroBlobs />
+        <div className="relative mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6">
+          {/* Looping welcome line — letters from blue balls, glitter sparkles */}
+          <div className="mb-8">
+            <WelcomeLoop />
           </div>
-          <h1 className="max-w-4xl text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tighter text-foreground leading-[1.1] sm:leading-[1.1] md:leading-[1.05]">
-            Face verification that stores no face
-          </h1>
-          <p className="max-w-2xl mt-6 sm:mt-8 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
-            Enroll a person from five photos. Later, send one new photo and get
-            back a yes or no. We keep a hash and a random rotation per person,
-            so a stolen database gives an attacker no face to rebuild.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 mt-8 sm:mt-10 w-full sm:w-auto px-4 sm:px-0">
-            <Link href="/sign-up" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full h-12 px-8 text-base shadow-sm"
-              >
-                Get an API key
-              </Button>
-            </Link>
-            <Link href="#features" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full h-12 px-8 text-base shadow-sm bg-background/50 backdrop-blur-sm"
-              >
-                See how it works <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature & Code Section */}
-      <section
-        id="features"
-        className="relative z-10 py-16 sm:py-24 border-t border-border bg-background/80 backdrop-blur-md"
-      >
-        <div className="px-4 sm:px-6 mx-auto w-full max-w-7xl">
-          <div className="grid gap-16 lg:grid-cols-2 lg:gap-8 items-center">
-            {/* Text description */}
+          {/* Text row — headline left, continuation + CTAs right */}
+          <div className="grid items-end gap-5 lg:grid-cols-2 lg:gap-10">
+            <h1 className="font-display text-display font-semibold leading-[1.02] tracking-tight">
+              It&rsquo;s really you.{" "}
+              <span className="text-white/55">
+                And we can prove it without keeping your face.
+              </span>
+            </h1>
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
-                Three HTTP calls.
-              </h2>
-              <p className="mt-4 text-base sm:text-lg text-muted-foreground">
-                Enroll, verify, delete. There is no SDK to install: anything
-                that can send a multipart request can use it.
+              <p className="max-w-md text-body leading-relaxed text-white/60">
+                Imani Vision lets you add face-based login, transaction
+                step-up, and liveness checks to your product through an API. It
+                stores only templates that can&apos;t be turned back into a
+                face, and it discards raw images once the template is made.
               </p>
-
-              <div className="mt-10 space-y-8">
-                <div className="flex gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 border rounded-lg shrink-0 bg-background border-border">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">
-                      Protected templates
-                    </h3>
-                    <p className="mt-2 text-muted-foreground">
-                      Each person is stored as a SHA-256 hash and a random
-                      512×512 rotation (IronMask). Recovering the face
-                      embedding from a stolen record takes about 2^91 guesses.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 border rounded-lg shrink-0 bg-background border-border">
-                    <Target className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">Measured accuracy</h3>
-                    <p className="mt-2 text-muted-foreground">
-                      On the LFW benchmark, 2.1% of genuine attempts were
-                      rejected and none of 155,000 impostor attempts got
-                      through. Every check is one photo against one enrolled
-                      person, never a search.
-                    </p>
-                  </div>
-                </div>
+              <div className="mt-6 flex flex-row flex-wrap gap-4">
+                <Link href="/contact">
+                  <Button size="lg" className="h-14 px-9 text-base font-semibold text-white shadow-lg shadow-signal/30 bg-signal hover:bg-signal/90">
+                    Get started
+                  </Button>
+                </Link>
+                <Link href="/docs">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 border-white/25 bg-transparent px-9 text-base font-semibold text-white hover:bg-white/10 hover:text-white"
+                  >
+                    Read the docs
+                  </Button>
+                </Link>
               </div>
             </div>
+          </div>
 
-            {/* Code snippet IDE mockup */}
-            <div className="relative overflow-hidden border rounded-xl bg-zinc-950 border-zinc-800 shadow-2xl">
-              <div className="flex items-center px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
-                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
-                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
-                </div>
-                <div className="flex items-center justify-center flex-1">
-                  <span className="text-xs text-zinc-400 font-mono">
-                    verify.js
-                  </span>
-                </div>
-              </div>
-              <pre className="p-6 text-sm font-mono text-zinc-300 overflow-x-auto">
-                <code>{VERIFY_SNIPPET}</code>
-              </pre>
-            </div>
+          <div className="relative mt-10 pb-3">
+            <HeroCloser />
           </div>
         </div>
       </section>
 
-      {/* Middle CTA */}
-      <section className="relative z-10 py-16 sm:py-24 border-t border-border bg-background/90 backdrop-blur-md">
-        <div className="px-4 sm:px-6 mx-auto text-center w-full max-w-7xl">
-          <Terminal className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-6 text-muted-foreground/50" />
-          <h2 className="mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
-            Try it on your own face.
-          </h2>
-          <p className="max-w-2xl mx-auto mb-8 sm:mb-10 text-base sm:text-lg md:text-xl text-muted-foreground px-4">
-            Sign up, open Live Test in the dashboard, enroll from five webcam
-            photos, then verify a new selfie. You can delete the template with
-            one click when you&apos;re done.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto px-4 sm:px-0">
-            <Link href="/sign-up" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full h-12 px-8 text-base shadow-sm"
-              >
-                Start Building
-              </Button>
-            </Link>
-            <Link href="/docs" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full h-12 px-8 text-base gap-2 bg-background/50 backdrop-blur-sm shadow-sm"
-              >
-                Read the Docs <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
+      <TrustStrip />
+
+      {/* Feature cards */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6">
+          <div className="scroll-rise-stagger feature-grid">
+            {/* 1 — login */}
+            <BentoCard
+              title="Built for the faces you serve."
+              body="If it only works in a lab, it doesn't work. Real cameras, real lighting — numbers only after evaluation."
+              learnHref="/platform"
+              className="min-[1100px]:col-span-2"
+            >
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-verified motion-safe:animate-pulse" />
+                <span className="font-mono text-[13px] font-medium text-ink/55">face check</span>
+              </div>
+              <div className="[&>svg]:mx-auto [&>svg]:h-36 [&>svg]:w-36">
+                <FaceIdScan />
+              </div>
+            </BentoCard>
+
+            {/* 2 — onboarding flow */}
+            <BentoCard
+              title="Checks your users can pass."
+              body="A missed check ends in a retry, not a dead end. Fewer lockouts, fewer support tickets."
+              learnHref="/platform"
+              variant={2}
+            >
+              <OnboardingMock />
+            </BentoCard>
+
+            {/* 3 — liveness (dark, hero-like) */}
+            <BentoCard
+              title="Stops spoofs and deepfakes."
+              body="Photos, replays, and AI-swapped faces get caught by liveness checks on every verification."
+              learnHref="/platform"
+              variant={3}
+            >
+              <LivenessMock />
+            </BentoCard>
+
+            {/* 4 — protected templates */}
+            <BentoCard
+              title="Store templates, never faces."
+              body="Templates can't turn back into faces. Steal the database, hold nothing — then we revoke and reissue."
+              learnHref="/security"
+              variant={4}
+            >
+              <TemplateMock />
+            </BentoCard>
+
+            {/* 5 — pricing */}
+            <BentoCard
+              title="Pricing that follows your usage."
+              body="One price per check type, no seats. Volume brings the unit price down."
+              learnHref="/pricing"
+              variant={5}
+            >
+              <PriceMock />
+            </BentoCard>
+
+            {/* 6 — docs */}
+            <BentoCard
+              title="Endpoints that won’t break on you."
+              body="A quickstart where every request runs, and versioned endpoints that won't break you."
+              learnHref="/docs"
+              variant={6}
+              className="min-[1100px]:col-span-3"
+            >
+              <CodeMock />
+            </BentoCard>
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="relative z-10 py-16 sm:py-24 border-t border-border bg-background/95 backdrop-blur-xl">
-        <div className="px-4 sm:px-6 mx-auto w-full max-w-3xl text-center">
-          <h2 className="mb-4 text-3xl sm:text-4xl font-bold tracking-tight md:text-5xl">
-            Free during the beta
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
-            Every API key gets 60 calls a minute, with bursts of up to 20.
-            Calls are counted per key so paid plans can follow, but billing
-            isn&apos;t built yet.
+      {/* How it works */}
+      <section className="bg-mist">
+        <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6">
+          <p className="max-w-3xl font-display text-h1 font-semibold leading-tight tracking-tight text-ink">
+            Capture. Protect. Verify.{" "}
+            <span className="text-ink/50">
+              A face becomes a protected template in one step. After that, every
+              login, transaction, and routine check is a comparison against
+              something that can&apos;t be reversed.
+            </span>
           </p>
-          <Link href="/pricing" className="inline-block mt-8">
-            <Button variant="outline" size="lg" className="h-12 px-8 text-base gap-2">
-              What&apos;s included <ChevronRight className="w-4 h-4" />
-            </Button>
+          <div className="scroll-rise-stagger mt-10 grid gap-4 md:grid-cols-3">
+            {[
+              { step: "1", title: "Capture", body: "Collect a face at login or check time. Discard the image after the template is made." },
+              { step: "2", title: "Protect", body: "Scramble the face with a one-way transform. Store only the protected template." },
+              { step: "3", title: "Verify", body: "Compare each new check against the template. Revoke and reissue if it is ever exposed." },
+            ].map((s) => (
+              <div key={s.step} className="rounded-xl bg-white p-6">
+                <p className="font-mono text-caption text-signal">0{s.step}</p>
+                <h3 className="mt-2 font-display text-h3 font-semibold text-ink">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink/65">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* For developers */}
+      <section className="bg-navy text-white">
+        <div className="scroll-rise mx-auto grid max-w-[1200px] gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:items-center">
+          <div>
+            <p className="font-display text-h1 font-semibold leading-tight tracking-tight">
+              Three calls. One API.{" "}
+              <span className="text-white/55">
+                Add verification where your users already are, with versioned
+                endpoints and a sandbox to test against.
+              </span>
+            </p>
+            <Link href="/docs" className="mt-6 inline-block">
+              <Button size="lg" className="h-12 bg-signal px-7 text-white hover:bg-signal/90">
+                Open the quickstart
+              </Button>
+            </Link>
+          </div>
+          <div className="rounded-xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+            <p className="font-mono text-xs text-white/50">Illustrative request — endpoint and fields are placeholders</p>
+            <pre className="mt-3 overflow-x-auto font-mono text-[13px] leading-relaxed text-white">
+{`POST /v1/verify/transaction
+Authorization: Bearer sk_test_...
+
+{
+  "user_id": "usr_123",
+  "amount": 250000,
+  "currency": "NGN",
+  "risk_signals": {
+    "new_payee": true,
+    "device_changed": false
+  }
+}`}
+            </pre>
+          </div>
+        </div>
+      </section>
+
+      {/* Security band */}
+      <section className="bg-white">
+        <div className="scroll-rise mx-auto max-w-[1200px] px-4 py-20 sm:px-6">
+          <p className="max-w-3xl font-display text-h1 font-semibold leading-tight tracking-tight text-ink">
+            We can&apos;t leak what we never store.{" "}
+            <span className="text-ink/50">
+              Face data is scrambled with a one-way transform before it is
+              saved, so a stolen database contains nothing an attacker can turn
+              back into a face.
+            </span>
+          </p>
+          <Link href="/security" className="mt-6 inline-flex items-center gap-1 font-medium text-signal">
+            Read how protection works <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="relative z-10 border-t border-border bg-background">
-        <FAQ />
+      {/* Closing CTA */}
+      <section className="bg-navy text-white">
+        <div className="scroll-rise mx-auto max-w-[1200px] px-4 py-20 text-center sm:px-6">
+          <p className="mx-auto max-w-2xl font-display text-h1 font-semibold leading-tight tracking-tight">
+            Start verifying in minutes.{" "}
+            <span className="text-white/55">Talk to us about your first integration.</span>
+          </p>
+          <div className="mt-8 flex justify-center">
+            <Link href="/contact">
+              <Button size="lg" className="h-12 bg-signal px-8 text-white hover:bg-signal/90">
+                Get started
+              </Button>
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   );

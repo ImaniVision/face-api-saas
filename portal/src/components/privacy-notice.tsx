@@ -45,7 +45,7 @@ export function PrivacyNotice() {
       className="fixed inset-x-0 bottom-0 z-50 p-4 sm:bottom-4 sm:left-4 sm:right-auto sm:max-w-md"
     >
       <div className="flex gap-3 rounded-xl border border-border/60 bg-card/95 p-4 shadow-2xl backdrop-blur">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-fuchsia-400" />
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-signal" />
         <p className="text-sm text-muted-foreground">
           Imani Vision verifies faces. We never store your photos, only a protected template that
           can&apos;t be turned back into a face, and we use only sign-in cookies.{" "}

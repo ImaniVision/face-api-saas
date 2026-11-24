@@ -1,68 +1,69 @@
-import Link from "next/link"
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
-import { Button } from "@/components/ui/button"
+const groups = [
+  {
+    title: "Getting started",
+    links: [
+      { label: "Quickstart", href: "/docs" },
+      { label: "Authentication", href: "/docs/authentication" },
+      { label: "Errors", href: "/docs/errors" },
+    ],
+  },
+  {
+    title: "API reference",
+    links: [
+      { label: "Enroll", href: "/docs/enrollment" },
+      { label: "Verify", href: "/docs/verification" },
+      { label: "Risk-checked payments", href: "/docs/payments" },
+    ],
+  },
+];
 
 export default function DocsLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode
+  children: React.ReactNode;
 }) {
-    return (
-        <div className="flex min-h-screen flex-col md:flex-row">
-            <aside className="w-full border-r bg-muted/20 md:w-64 md:min-h-screen md:shrink-0">
-                <div className="flex h-16 items-center border-b px-6">
-                    <Link href="/" className="text-xl font-bold tracking-tight">
-                        Imani Vision <span className="text-sm font-normal text-muted-foreground">Docs</span>
-                    </Link>
-                </div>
-                <div className="p-4">
-                    <div className="mb-4">
-                        <h4 className="mb-2 px-2 text-sm font-semibold tracking-tight">Getting Started</h4>
-                        <div className="space-y-1">
-                            <Link href="/docs">
-                                <Button variant="ghost" size="sm" className="w-full justify-start">
-                                    Introduction
-                                </Button>
-                            </Link>
-                            <Link href="/docs/errors">
-                                <Button variant="ghost" size="sm" className="w-full justify-start">
-                                    Errors &amp; limits
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="mb-4">
-                        <h4 className="mb-2 px-2 text-sm font-semibold tracking-tight">API Reference</h4>
-                        <div className="space-y-1">
-                            <Link href="/docs/enrollment">
-                                <Button variant="ghost" size="sm" className="w-full justify-start">
-                                    Enrollment
-                                </Button>
-                            </Link>
-                            <Link href="/docs/verification">
-                                <Button variant="ghost" size="sm" className="w-full justify-start">
-                                    Verification
-                                </Button>
-                            </Link>
-                            <Link href="/docs/payments">
-                                <Button variant="ghost" size="sm" className="w-full justify-start">
-                                    Risk-checked payments
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="mt-8 px-2">
-                        <Link href="/dashboard">
-                            <Button size="sm" className="w-full">
-                                Go to Dashboard
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </aside>
-            <main className="flex-1 py-8 px-6 md:px-12 md:py-12 max-w-4xl">
-                {children}
-            </main>
+  return (
+    <div className="flex min-h-screen flex-col bg-white md:flex-row">
+      <aside className="w-full shrink-0 border-b border-border md:w-64 md:border-b-0 md:border-r">
+        <div className="flex h-16 items-center gap-2.5 border-b border-border px-6">
+          <Image src="/logo.svg" alt="Imani Vision" width={24} height={24} />
+          <Link href="/" className="font-display text-base font-semibold text-ink">
+            Imani Vision <span className="text-sm font-normal text-ink/50">Docs</span>
+          </Link>
         </div>
-    )
+        <div className="space-y-6 p-4">
+          {groups.map((g) => (
+            <div key={g.title}>
+              <h4 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-ink/45">
+                {g.title}
+              </h4>
+              <div className="space-y-1">
+                {g.links.map((l) => (
+                  <Link key={l.href} href={l.href}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+                      {l.label}
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div className="px-2 pt-2">
+            <Link href="/dashboard">
+              <Button size="sm" className="w-full bg-signal text-white hover:bg-signal/90">
+                Go to Dashboard
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </aside>
+      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-8 md:px-12 md:py-12">
+        {children}
+      </main>
+    </div>
+  );
 }

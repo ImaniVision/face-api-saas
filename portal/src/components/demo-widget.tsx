@@ -200,12 +200,12 @@ export function DemoWidget() {
   const isBusy = pending !== null;
 
   return (
-    <Card className="overflow-hidden border-border/40 bg-card/80 backdrop-blur-sm">
+    <Card className="overflow-hidden border-border bg-white">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Aperture className="h-5 w-5 text-fuchsia-400" />
+              <Aperture className="h-5 w-5 text-signal" />
               Live Verification Demo
             </CardTitle>
             <CardDescription className="mt-1">
@@ -216,7 +216,7 @@ export function DemoWidget() {
           </div>
           <Badge
             variant="outline"
-            className="border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-400"
+            className="border-signal/30 bg-signal/[0.07] text-signal"
           >
             Interactive
           </Badge>
@@ -227,7 +227,7 @@ export function DemoWidget() {
         <div
           role="tablist"
           aria-label="Demo step"
-          className="grid grid-cols-3 gap-1 rounded-lg border border-border/40 p-1"
+          className="grid grid-cols-3 gap-1 rounded-lg border border-border p-1"
         >
           {(["enroll", "verify", "pay"] as const).map((m) => (
             <button
@@ -249,23 +249,23 @@ export function DemoWidget() {
         </div>
 
         {/* Camera / Captured Image */}
-        <div className="relative overflow-hidden rounded-lg border border-border/40 bg-black/50">
+        <div className="relative overflow-hidden rounded-xl border border-border bg-navy">
           {!isCameraAllowed ?
-            <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px] h-full bg-black/40">
-              <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center mb-4 border border-border/50">
-                <ShieldAlert className="h-8 w-8 text-fuchsia-400/80" />
+            <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px] h-full bg-navy">
+              <div className="h-16 w-16 rounded-full bg-white/[0.06] flex items-center justify-center mb-4 border border-white/15">
+                <ShieldAlert className="h-8 w-8 text-amber" />
               </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">
+              <h3 className="text-lg font-medium text-white mb-2">
                 Camera Access Required
               </h3>
-              <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                We need your permission to use the camera for secure facial
+              <p className="mb-6 max-w-xs text-sm text-white/60">
+                We need your permission to use the camera for facial
                 verification.
               </p>
               <Button
                 onClick={() => setIsModalOpen(true)}
                 variant="secondary"
-                className="bg-muted hover:bg-muted/80 text-foreground"
+                className="bg-signal text-white hover:bg-signal/90"
               >
                 <Camera className="mr-2 h-4 w-4" />
                 Grant Permission
@@ -314,7 +314,7 @@ export function DemoWidget() {
                 {Array.from({ length: ENROLMENT_PHOTOS }, (_, i) => (
                   <div
                     key={i}
-                    className="aspect-square overflow-hidden rounded-md border border-border/40 bg-black/40"
+                    className="aspect-square overflow-hidden rounded-md border border-border bg-black/40"
                   >
                     {enrollShots[i] ?
                       <img
@@ -336,7 +336,7 @@ export function DemoWidget() {
             </div>
 
             {/* Consent */}
-            <div className="flex items-start gap-3 rounded-lg border border-border/40 p-3">
+            <div className="flex items-start gap-3 rounded-lg border border-border p-3">
               <Checkbox
                 id="demo-consent"
                 checked={hasConsent}
@@ -393,7 +393,7 @@ export function DemoWidget() {
               </div>
             </div>
             {stepUp ?
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
+              <div className="rounded-lg border border-amber/30 bg-amber/[0.07] p-3 text-sm text-ink">
                 <p className="font-medium">Face check required</p>
                 <ul className="mt-1 list-disc pl-5 text-xs">
                   {stepUp.map((reason) => (
@@ -419,7 +419,7 @@ export function DemoWidget() {
             <Button
               onClick={() => run("pay")}
               disabled={isBusy}
-              className="flex-1 gap-2 bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:brightness-110"
+              className="flex-1 gap-2 bg-signal text-white hover:bg-signal/90"
             >
               {pending === "pay" ?
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -429,7 +429,7 @@ export function DemoWidget() {
           : !isCameraAllowed ?
             <Button
               onClick={() => setIsModalOpen(true)}
-              className="flex-1 gap-2 bg-linear-to-r from-fuchsia-600 to-pink-600 text-white shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40 transition-all hover:brightness-110"
+              className="flex-1 gap-2 bg-signal text-white hover:bg-signal/90"
             >
               <Camera className="h-4 w-4" />
               Enable Camera
@@ -440,7 +440,7 @@ export function DemoWidget() {
                 <Button
                   onClick={() => run("enroll")}
                   disabled={isBusy || !hasConsent}
-                  className="flex-1 gap-2 bg-linear-to-r from-fuchsia-600 to-pink-600 text-white shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40 transition-all hover:brightness-110"
+                  className="flex-1 gap-2 bg-signal text-white hover:bg-signal/90"
                 >
                   {pending === "enroll" ?
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -450,7 +450,7 @@ export function DemoWidget() {
               : <Button
                   onClick={capture}
                   disabled={isBusy}
-                  className="flex-1 gap-2 bg-linear-to-r from-fuchsia-600 to-pink-600 text-white shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40 transition-all hover:brightness-110"
+                  className="flex-1 gap-2 bg-signal text-white hover:bg-signal/90"
                 >
                   <Camera className="h-4 w-4" />
                   Capture photo {enrollShots.length + 1} of {ENROLMENT_PHOTOS}
@@ -469,7 +469,7 @@ export function DemoWidget() {
           : verifyShot === null ?
             <Button
               onClick={capture}
-              className="flex-1 gap-2 bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:brightness-110"
+              className="flex-1 gap-2 bg-signal text-white hover:bg-signal/90"
             >
               <Camera className="h-4 w-4" />
               Capture Selfie
@@ -478,7 +478,7 @@ export function DemoWidget() {
               <Button
                 onClick={() => run(mode === "pay" ? "pay" : "verify")}
                 disabled={isBusy}
-                className="flex-1 gap-2 bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:brightness-110"
+                className="flex-1 gap-2 bg-signal text-white hover:bg-signal/90"
               >
                 {isBusy ?
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -512,16 +512,16 @@ export function DemoWidget() {
           <div
             className={`flex items-center gap-2 rounded-lg border p-4 ${
               result.match ?
-                "border-green-500/30 bg-green-500/10"
-              : "border-red-500/30 bg-red-500/10"
+                "border-verified/30 bg-verified/[0.07]"
+              : "border-destructive/30 bg-destructive/[0.05]"
             }`}
           >
             {result.match ?
-              <CheckCircle2 className="h-5 w-5 text-green-400" />
-            : <XCircle className="h-5 w-5 text-red-400" />}
+              <CheckCircle2 className="h-5 w-5 text-verified" />
+            : <XCircle className="h-5 w-5 text-destructive" />}
             <span
               className={`font-semibold ${
-                result.match ? "text-green-400" : "text-red-400"
+                result.match ? "text-verified" : "text-destructive"
               }`}
             >
               {result.match ? "Match" : "No Match"}
@@ -532,8 +532,8 @@ export function DemoWidget() {
           <div
             className={`flex items-center gap-2 rounded-lg border p-4 text-sm ${
               result.approved ?
-                "border-green-500/30 bg-green-500/10 text-green-400"
-              : "border-red-500/30 bg-red-500/10 text-red-400"
+                "border-verified/30 bg-verified/[0.07] text-verified"
+              : "border-destructive/30 bg-destructive/[0.05] text-destructive"
             }`}
           >
             {result.approved ?
@@ -547,7 +547,7 @@ export function DemoWidget() {
           </div>
         )}
         {result?.kind === "enrolled" && (
-          <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-400">
+          <div className="flex items-center gap-2 rounded-lg border border-verified/30 bg-verified/[0.07] p-4 text-sm text-verified">
             <CheckCircle2 className="h-5 w-5 shrink-0" />
             Enrolled. Consent recorded at{" "}
             {new Date(result.consentGrantedAt).toLocaleString()}. Switch to
@@ -555,7 +555,7 @@ export function DemoWidget() {
           </div>
         )}
         {result?.kind === "deleted" && (
-          <div className="flex items-center gap-2 rounded-lg border border-border/40 p-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 rounded-lg border border-border p-4 text-sm text-muted-foreground">
             <Trash2 className="h-5 w-5 shrink-0" />
             Your demo face template and consent record were deleted.
           </div>
@@ -563,10 +563,10 @@ export function DemoWidget() {
 
         {/* Error Display */}
         {error && (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/[0.05] p-4">
             <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 shrink-0 text-red-400" />
-              <span className="text-sm text-red-400">{error}</span>
+              <XCircle className="h-5 w-5 shrink-0 text-destructive" />
+              <span className="text-sm text-destructive">{error}</span>
             </div>
           </div>
         )}
