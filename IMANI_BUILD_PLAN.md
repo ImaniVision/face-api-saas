@@ -56,14 +56,25 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
 
 **Goal:** the thesis-worthy contribution — stored templates that can't be reversed into a face.
 
-- [ ] **SPIKE FIRST (throwaway):** apply IronMask to embeddings, store protected templates in pgvector, and measure:
+- [x] **SPIKE FIRST (throwaway):** → results in `spikes/ironmask/RESULTS.md`. apply IronMask to embeddings, store protected templates in pgvector, and measure:
   - equal-error-rate (EER) degradation vs. unprotected matching, and
   - retrieval accuracy + query latency at increasing template counts.
   - **This spike decides the architecture. Report the numbers either way — a negative result is a valid thesis finding.**
-- [ ] If viable: integrate protected templates as the real storage path (replaces raw-embedding storage — this is why we didn't gold-plate that earlier).
-- [ ] Produce a results table (EER cost, retrieval %, latency) for the report/slides.
+- [x] If viable: integrate protected templates as the real storage path (replaces raw-embedding storage — this is why we didn't gold-plate that earlier).
+  → Viable at α=12 with 5 enrolment photos. Built: `app/protection.py`, `/enroll` + `/verify`, `bytea` templates, 5-photo enrolment API + portal demo, 409 re-enrolment, `db/m2-protected-templates.sql`. Unit tests + production-path LFW re-check pass. E2E through the gateway: 18/19 pass. Verify latency 250 ms median (meets < 300 ms) / 318 ms p95 (misses by 18 ms on laptop CPU; accuracy not traded for it). Storage spike done (not applied): int8-quantised P is 4x smaller (263 KB, 0.27 TB per 1M users) with no measurable accuracy change and the same 2^91; embedding-dimension reduction fails. See RESULTS.md "Storage spike".
+- [x] Fix the RGB/BGR channel bug in `app/engine.py` (separate PR, lands before the IronMask integration).
+- [x] Produce a results table (EER cost, retrieval %, latency) for the report/slides.
+- **M2 follow-ups**
+  - [x] Template versioning: `biometrics.template_version` (1 = fp32, 2 = int8). Both readable; new enrolments write `ENROL_TEMPLATE_VERSION` (default 1).
+  - [x] int8 storage validated and **adopted as production** (template v2): identical impostor decisions on 14.2M attempts, FRR 2.00% vs 2.00%, 2^91 holds, 4x smaller, gateway p50/p95/p99 229/273/313 ms vs fp32 250/297/382 ms.
+  - [x] `examples/` rewritten for the 5-photo flow (server client + Express routes + React), strict type-checked.
+  - [~] Privacy policy draft at `/privacy` + one-time UI privacy notice. Before launch: operator legal name, contact address, hosting/email providers, legal review.
+  - [~] Terms of service draft at `/terms`, marked not in force. Same launch inputs as the privacy policy: legal name, contact, governing law, providers, legal review.
+  - [x] Split into PRs: `fix/bgr-channel-order`, `m2/ironmask-integration`, `perf/ml-detection-speed`, `docs/m2-results-portal-legal`, `perf/int8-templates` (stacked, local).
 
 **Done when:** enrolled faces match correctly through protected templates, AND you have a measured table of the accuracy/latency cost. *(If only the project reaches here, it's already a strong final-year project.)*
+
+> **M2 done; baseline frozen** (git tag `m2-baseline`). Numbers: `spikes/ironmask/RESULTS.md`, section "M2 baseline".
 
 ---
 
@@ -71,8 +82,10 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
 
 **Goal:** demonstrate *continuous / risk-based* verification cheaply, with no ML risk.
 
-- [ ] Rules layer in front of the (mock) transaction API deciding when to require a face check.
-- [ ] At least one demonstrable rule (e.g. "new payee → require face", "amount over X → require face").
+- [x] Rules layer in front of the (mock) transaction API deciding when to require a face check.
+  → `POST /v1/subjects/:id/transactions` (`api-gateway/src/transactions/`). Pure rules in `risk.rules.ts`; the selfie is verified 1:1 in the same request as the payment, so a match can't be replayed onto another payment. Only approved payments are stored (payee/device as SHA-256), deleted with the subject.
+- [x] At least one demonstrable rule (e.g. "new payee → require face", "amount over X → require face").
+  → Three: amount ≥ 1,000.00, new payee, new device. Shown in the portal Live Test "3. Pay" step and docs page `/docs/payments`. Tests: 9 unit (rules at/below/above the limit, the four outcomes), 14 end-to-end checks in `spikes/ironmask/e2e_gateway.mjs` (each rule fires, impostor declined, genuine approved, history hashed and deleted).
 
 **Done when:** a rule demonstrably triggers a verification in the demo.
 
@@ -82,7 +95,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · ⭐ = project centerpie
 
 **Goal:** the demo proves the thesis's central claim on the day, no surprises.
 
-- [ ] End-to-end demo path rehearsed and working.
+- [~] End-to-end demo path rehearsed and working.
+  → Path, pre-flight checklist, timed script and failure playbook in `DEMO.md`. Working: `spikes/ironmask/e2e_gateway.mjs` 30/30 on AC power (2026-10-05). Rehearsal still to do (team).
 - [ ] Recorded fallback video of the live demo.
 - [ ] M2 results table in the slide deck.
 - [ ] Thesis final draft cites real artifacts (tests, numbers, endpoints) — not plans.

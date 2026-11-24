@@ -1,85 +1,79 @@
+import { Badge } from "@/components/ui/badge"
+
 export default function VerificationDocsPage() {
-  return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="font-display text-h1 font-semibold tracking-tight text-ink">
-          Verify
-        </h1>
-        <p className="mt-3 text-body leading-relaxed text-ink/60">
-          Compare a fresh capture against an enrolled template. A match returns
-          a token; anything else returns an error.
-        </p>
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-border">
-        <div className="border-b border-border bg-mist/60 px-6 py-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-md bg-signal px-2 py-1 font-mono text-xs font-semibold text-white">
-              POST
-            </span>
-            <code className="font-mono text-sm font-semibold text-ink">/auth/verify-face</code>
-          </div>
-          <p className="mt-2 text-sm text-ink/60">
-            The developer call. Authenticates with an API key, takes an email
-            plus image, returns a token only on match.
-          </p>
-        </div>
-        <div className="grid gap-6 p-6 md:grid-cols-2">
-          <div>
-            <h3 className="text-sm font-semibold text-ink">Headers and fields</h3>
-            <ul className="mt-3 space-y-3 text-sm">
-              <li>
-                <code className="font-mono font-semibold text-ink">x-api-key</code>{" "}
-                <span className="text-ink/50">header, required</span>
-                <p className="mt-1 text-xs text-ink/55">
-                  Or <code className="font-mono">Authorization: Bearer sk_live_...</code>
+    return (
+        <div className="space-y-10">
+            <div>
+                <h1 className="text-4xl font-bold tracking-tight">Verification</h1>
+                <p className="mt-4 text-xl text-muted-foreground">
+                    Is this photo the person enrolled under this ID?
                 </p>
-              </li>
-              <li>
-                <code className="font-mono font-semibold text-ink">email</code>{" "}
-                <span className="text-ink/50">field, required</span>
-              </li>
-              <li>
-                <code className="font-mono font-semibold text-ink">image</code>{" "}
-                <span className="text-ink/50">file, required</span>
-              </li>
-            </ul>
-          </div>
-          <pre className="h-fit overflow-x-auto rounded-xl bg-navy p-4 font-mono text-[13px] leading-relaxed text-white">
-{`curl -X POST http://localhost:3000/auth/verify-face \\
-  -H "x-api-key: sk_live_..." \\
-  -F "email=user@company.com" \\
-  -F "image=@selfie.jpg"
+            </div>
 
-→ 201 Created, on match
-{ "access_token": "<jwt>" }
+            <div className="space-y-8">
+                <div className="border rounded-lg p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <Badge className="bg-blue-500 hover:bg-blue-600">POST</Badge>
+                        <h2 className="text-xl font-mono font-semibold">/v1/subjects/{"{externalId}"}/verify</h2>
+                    </div>
+                    <p className="text-muted-foreground mb-4">
+                        Compares one photo with the one person enrolled as <code>externalId</code>. There is no
+                        similarity score: a protected template can only answer match or no match.
+                    </p>
 
-→ 401, on mismatch
-{ "message": "Biometric verification failed" }`}
-          </pre>
-        </div>
-      </div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 className="font-semibold mb-2">Multipart fields</h3>
+                            <ul className="space-y-2 text-sm">
+                                <li className="flex gap-2">
+                                    <code className="font-mono font-bold">image</code>
+                                    <span className="text-muted-foreground">file (required)</span>
+                                </li>
+                                <li className="text-muted-foreground text-xs ml-8">
+                                    JPEG, PNG or WebP, at most 5 MB, exactly one face.
+                                </li>
+                            </ul>
+                            <h3 className="font-semibold mb-2 mt-6">Status codes</h3>
+                            <ul className="space-y-2 text-sm text-muted-foreground">
+                                <li><code>200</code> the comparison ran; read <code>match</code></li>
+                                <li><code>400</code> no face, or more than one face, in the photo</li>
+                                <li><code>404</code> nobody is enrolled under this ID</li>
+                                <li>
+                                    <code>409</code> enrolled before protected templates existed; enroll them
+                                    again with 5 photos
+                                </li>
+                            </ul>
+                        </div>
 
-      <div className="overflow-hidden rounded-xl border border-border">
-        <div className="border-b border-border bg-mist/60 px-6 py-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-md bg-signal px-2 py-1 font-mono text-xs font-semibold text-white">
-              POST
-            </span>
-            <code className="font-mono text-sm font-semibold text-ink">/auth/login</code>
-          </div>
-          <p className="mt-2 text-sm text-ink/60">
-            Same face comparison without an API key, for first-party apps.
-          </p>
+                        <div className="bg-muted p-4 rounded-lg text-sm font-mono overflow-auto h-fit">
+                            <div className="text-muted-foreground mb-2">{`// Request`}</div>
+                            <pre>{`curl -X POST \\
+  http://localhost:3000/v1/subjects/customer-42/verify \\
+  -H "x-api-key: $KEY" \\
+  -F "image=@new.jpg"`}</pre>
+                            <div className="text-muted-foreground mb-2 mt-4">{`// Response 200`}</div>
+                            <pre>{`{
+  "match": true
+}`}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="prose prose-slate dark:prose-invert max-w-none">
+                    <h3>How often it is wrong</h3>
+                    <p>
+                        On LFW, a public set of web photos (311 people, 5 enrollment photos each), 2.1% of genuine
+                        attempts got <code>false</code> and 0 of 155,000 impostor attempts got <code>true</code>.
+                        Selfies taken in one sitting should do better than web photos taken years apart, but we
+                        haven&apos;t measured that yet. If someone is rejected, ask for another photo in better
+                        light before treating it as a different person.
+                    </p>
+                    <p>
+                        There is no liveness check yet: a good printed photo of the enrolled person could get{" "}
+                        <code>true</code>.
+                    </p>
+                </div>
+            </div>
         </div>
-        <div className="p-6">
-          <pre className="overflow-x-auto rounded-xl bg-navy p-4 font-mono text-[13px] leading-relaxed text-white">
-{`curl -X POST http://localhost:3000/auth/login \\
-  -F "email=user@company.com" \\
-  -F "image=@selfie.jpg"`}
-          </pre>
-        </div>
-      </div>
-    </div>
-  );
+    )
 }

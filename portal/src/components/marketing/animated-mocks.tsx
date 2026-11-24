@@ -20,39 +20,6 @@ export function TransactionMock() {
   );
 }
 
-export function LivenessMock() {
-  return (
-    <div>
-      <div className="relative rounded-lg border border-ink/10 px-3 pb-2 pt-3">
-        <span aria-hidden className="absolute -left-px -top-px h-5 w-5 rounded-tl-lg border-l-2 border-t-2 border-signal" />
-        <span aria-hidden className="absolute -right-px -top-px h-5 w-5 rounded-tr-lg border-r-2 border-t-2 border-signal" />
-        <span aria-hidden className="absolute -bottom-px -left-px h-5 w-5 rounded-bl-lg border-b-2 border-l-2 border-signal" />
-        <span aria-hidden className="absolute -bottom-px -right-px h-5 w-5 rounded-br-lg border-b-2 border-r-2 border-signal" />
-        <svg viewBox="0 0 220 48" className="h-12 w-full" aria-hidden="true">
-          <polyline
-            points="0,24 30,24 40,24 46,8 52,40 58,24 90,24 96,16 102,32 108,24 220,24"
-            fill="none"
-            stroke="#1FAA76"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeDasharray={640}
-            strokeDashoffset={640}
-            className="motion-safe:animate-[wave-draw_8s_linear_infinite]"
-          />
-        </svg>
-      </div>
-      <div className="mt-2 flex items-center justify-between text-[13px]">
-        <span className="inline-flex items-center gap-1.5 font-medium text-verified">
-          <span className="h-1.5 w-1.5 rounded-full bg-verified motion-safe:animate-pulse" />
-          Live person detected
-        </span>
-        <span className="text-ink/50">Synthetic artefacts: none</span>
-      </div>
-    </div>
-  );
-}
-
 export function TemplateMock() {
   return (
     <div className="relative h-[124px]">
@@ -113,7 +80,7 @@ export function OnboardingMock() {
   );
 }
 
-const PRICE_ROWS = ["login verification", "transaction step-up", "liveness check"];
+const PRICE_ROWS = ["enrollment", "1:1 verification", "transaction step-up"];
 
 export function PriceMock() {
   return (
@@ -137,9 +104,8 @@ export function CodeMock() {
   return (
     <div>
       <pre className="overflow-x-auto rounded-lg bg-navy p-3 font-mono text-[12px] leading-relaxed text-white">
-{`curl -X POST .../auth/verify-face \\
+{`curl -X POST .../v1/subjects/customer-42/verify \\
   -H "x-api-key: sk_live_..." \\
-  -F "email=user@company.com" \\
   -F "image=@selfie.jpg"`}
       </pre>
       <p className="mt-2 font-mono text-[12px] text-ink/40">every example runs</p>

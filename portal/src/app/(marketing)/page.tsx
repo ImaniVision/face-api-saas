@@ -8,7 +8,6 @@ import { FaceIdScan } from "@/components/marketing/face-id-scan";
 import { BentoCard } from "@/components/marketing/bento-card";
 import {
   CodeMock,
-  LivenessMock,
   OnboardingMock,
   PriceMock,
   TemplateMock,
@@ -36,9 +35,9 @@ export default function HomePage() {
             </h1>
             <div>
               <p className="max-w-md text-body leading-relaxed text-white/60">
-                Imani Vision lets you add face-based login, transaction
-                step-up, and liveness checks to your product through an API. It
-                stores only templates that can&apos;t be turned back into a
+                Imani Vision lets you add 1:1 face verification and risk-based
+                transaction step-up to your product through an API. It stores
+                only protected templates that can&apos;t be turned back into a
                 face, and it discards raw images once the template is made.
               </p>
               <div className="mt-6 flex flex-row flex-wrap gap-4">
@@ -98,14 +97,14 @@ export default function HomePage() {
               <OnboardingMock />
             </BentoCard>
 
-            {/* 3 — liveness (dark, hero-like) */}
+            {/* 3 — risk-based transaction step-up */}
             <BentoCard
-              title="Stops spoofs and deepfakes."
-              body="Photos, replays, and AI-swapped faces get caught by liveness checks on every verification."
-              learnHref="/platform"
+              title="Step up only when it's risky."
+              body="Low-risk payments go straight through. Large amounts, new payees, or new devices ask for a face check."
+              learnHref="/docs/payments"
               variant={3}
             >
-              <LivenessMock />
+              <TransactionMock />
             </BentoCard>
 
             {/* 4 — protected templates */}
@@ -148,8 +147,8 @@ export default function HomePage() {
           <p className="max-w-3xl font-display text-h1 font-semibold leading-tight tracking-tight text-ink">
             Capture. Protect. Verify.{" "}
             <span className="text-ink/50">
-              A face becomes a protected template in one step. After that, every
-              login, transaction, and routine check is a comparison against
+              A face becomes a protected template from five photos. After that,
+              every verification and risky transaction is checked against
               something that can&apos;t be reversed.
             </span>
           </p>
@@ -174,10 +173,11 @@ export default function HomePage() {
         <div className="scroll-rise mx-auto grid max-w-[1200px] gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="font-display text-h1 font-semibold leading-tight tracking-tight">
-              Three calls. One API.{" "}
+              Four calls. One API.{" "}
               <span className="text-white/55">
-                Add verification where your users already are, with versioned
-                endpoints and a sandbox to test against.
+                Add 1:1 face verification and risk-checked payments where your
+                users already are, with a self-hosted stack and live test
+                console.
               </span>
             </p>
             <Link href="/docs" className="mt-6 inline-block">
@@ -187,19 +187,18 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="rounded-xl bg-white/[0.06] p-5 ring-1 ring-white/10">
-            <p className="font-mono text-xs text-white/50">Illustrative request — endpoint and fields are placeholders</p>
+            <p className="font-mono text-xs text-white/50">Risk-checked payment — see /docs/payments</p>
             <pre className="mt-3 overflow-x-auto font-mono text-[13px] leading-relaxed text-white">
-{`POST /v1/verify/transaction
-Authorization: Bearer sk_test_...
+{`curl -X POST http://localhost:3000/v1/subjects/customer-42/transactions \\
+  -H "x-api-key: sk_live_..." \\
+  -F "amount=150000" \\
+  -F "payee=acct-889" \\
+  -F "device_id=phone-1"
 
+→ 200 OK
 {
-  "user_id": "usr_123",
-  "amount": 250000,
-  "currency": "NGN",
-  "risk_signals": {
-    "new_payee": true,
-    "device_changed": false
-  }
+  "status": "face_required",
+  "reasons": ["amount_over_limit", "new_payee", "new_device"]
 }`}
             </pre>
           </div>

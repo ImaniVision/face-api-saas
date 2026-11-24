@@ -14,8 +14,9 @@ const groups = [
   {
     title: "API reference",
     links: [
-      { label: "Enroll", href: "/docs/faces" },
+      { label: "Enroll", href: "/docs/enrollment" },
       { label: "Verify", href: "/docs/verification" },
+      { label: "Risk-checked payments", href: "/docs/payments" },
     ],
   },
 ];

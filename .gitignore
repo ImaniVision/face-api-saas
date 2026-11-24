@@ -74,5 +74,8 @@ docker-compose.override.yml
 .claude
 CLAUDE.md
 
+# M2 spike: LFW download cache + embeddings (biometric data, never commit)
+spikes/ironmask/data/
+
 # Claude <-> Gemini review channel (local only)
 conversations.md

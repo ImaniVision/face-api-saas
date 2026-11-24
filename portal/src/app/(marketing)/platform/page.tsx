@@ -38,70 +38,65 @@ export default function PlatformPage() {
       <section className="bg-navy text-white">
         <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 md:py-24">
           <p className="max-w-3xl font-display text-display font-semibold leading-[1.05] tracking-tight">
-            Three calls. One API.{" "}
+            Four calls. One API.{" "}
             <span className="text-white/55">
-              Add verification where your users already are, with versioned
-              endpoints and a sandbox to test against.
+              Enroll from five photos, verify 1:1, gate risky payments, and
+              delete on request.
             </span>
           </p>
           <p className="mt-4 font-mono text-xs text-white/40">
-            Endpoint shapes below are illustrative — final paths land with the API.
+            All endpoints below run on the local stack. Delete any subject with DELETE /v1/subjects/:externalId.
           </p>
         </div>
       </section>
 
       <div className="mx-auto max-w-[1200px] space-y-6 px-4 py-16 sm:px-6">
         <EndpointBlock
-          method="POST"
-          path="/v1/verify/login"
-          when="Call it when a user returns. Use login verification instead of a password, or alongside one for high-risk accounts."
-          example={`{
-  "user_id": "usr_123",
-  "image": "<captured-frame>"
-}
+          method="PUT"
+          path="/v1/subjects/:externalId"
+          when="Enroll a person from 5 different photos under your own ID. Requires consent=true and stores only a protected IronMask template."
+          example={`curl -X PUT http://localhost:3000/v1/subjects/customer-42 \\
+  -H "x-api-key: sk_live_..." \\
+  -F "consent=true" \\
+  -F "images=@1.jpg" -F "images=@2.jpg" -F "images=@3.jpg" \\
+  -F "images=@4.jpg" -F "images=@5.jpg"
 
 → 200 OK
 {
-  "match": true,
-  "confidence": 0.97,
-  "template_id": "tpl_abc"
+  "externalId": "customer-42",
+  "consentId": "3f2c…",
+  "consentGrantedAt": "2026-10-03T14:07:12.000Z"
 }`}
         />
 
         <EndpointBlock
           method="POST"
-          path="/v1/verify/transaction"
-          when="Call it to step up a risky action. Risk signals — new payee, large amount, changed device — decide when a face check is required."
-          example={`{
-  "user_id": "usr_123",
-  "amount": 250000,
-  "currency": "NGN",
-  "risk_signals": {
-    "new_payee": true,
-    "device_changed": false
-  }
-}
+          path="/v1/subjects/:externalId/verify"
+          when="1:1 check that a new photo shows the enrolled person. Returns only a boolean match — never searches across other users."
+          example={`curl -X POST http://localhost:3000/v1/subjects/customer-42/verify \\
+  -H "x-api-key: sk_live_..." \\
+  -F "image=@new.jpg"
 
 → 200 OK
 {
-  "decision": "approved",
-  "step_up": "face_check_passed"
+  "match": true
 }`}
         />
 
         <EndpointBlock
           method="POST"
-          path="/v1/check/liveness"
-          when="Run a liveness check at login, before a transaction step-up, or on a schedule. It looks for a live pulse signal and for synthetic artefacts left by deepfakes and replays."
-          example={`{
-  "user_id": "usr_123",
-  "frames": ["<frame-1>", "<frame-2>"]
-}
+          path="/v1/subjects/:externalId/transactions"
+          when="Evaluate a payment against fixed risk rules (amount, new payee, new device). Low-risk payments approve immediately; risky ones return face_required until resent with a selfie."
+          example={`curl -X POST http://localhost:3000/v1/subjects/customer-42/transactions \\
+  -H "x-api-key: sk_live_..." \\
+  -F "amount=150000" \\
+  -F "payee=acct-889" \\
+  -F "device_id=phone-1"
 
 → 200 OK
 {
-  "live": true,
-  "artefacts": "none"
+  "status": "face_required",
+  "reasons": ["amount_over_limit", "new_payee", "new_device"]
 }`}
         />
 
@@ -111,14 +106,14 @@ export default function PlatformPage() {
             Built in parts that scale apart.
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink/60">
-            Each service scales on its own, so a spike in checks never slows
-            logins.
+            Each service has one job: the gateway enforces auth and risk rules,
+            and the private ML service owns embedding and matching.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
-              { name: "Gateway", body: "Terminates requests, enforces auth and rate limits, routes to services." },
-              { name: "ML service", body: "Runs matching and liveness. Stateless, so it scales horizontally." },
-              { name: "Vector store", body: "Holds protected templates only. Nothing here can be reversed into a face." },
+              { name: "Gateway", body: "Terminates requests, enforces auth, consent, rate limits, and payment risk rules." },
+              { name: "ML service", body: "Private to the gateway. Runs face detection, embedding, and IronMask matching. Liveness is planned future work." },
+              { name: "Postgres", body: "Holds protected IronMask templates (SHA-256 hash + 8-bit rotation), consent records, and usage. Nothing reversible." },
             ].map((s) => (
               <div key={s.name} className="rounded-xl bg-white p-6">
                 <p className="font-mono text-caption text-signal">{s.name}</p>
@@ -128,15 +123,15 @@ export default function PlatformPage() {
           </div>
         </section>
 
-        {/* Sandbox CTA — no sandbox promised until confirmed */}
+        {/* Live test CTA */}
         <section className="rounded-xl bg-navy p-6 text-center sm:p-10">
           <p className="mx-auto max-w-xl font-display text-h2 font-semibold text-white">
-            Test against a sandbox.{" "}
-            <span className="text-white/55">Talk to us about access.</span>
+            Try it in the Live Test console.{" "}
+            <span className="text-white/55">Run the local stack or read the quickstart.</span>
           </p>
-          <Link href="/contact" className="mt-6 inline-block">
+          <Link href="/docs" className="mt-6 inline-block">
             <Button size="lg" className="h-12 bg-signal px-8 text-white hover:bg-signal/90">
-              Talk to us <ArrowRight className="ml-1 h-4 w-4" />
+              Open the quickstart <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
         </section>

@@ -34,6 +34,11 @@ export default function SignUpPage() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
@@ -92,15 +97,10 @@ export default function SignUpPage() {
             Log in
           </Link>
           <span className="mt-3 block text-xs text-ink/45">
-            By signing up, you agree to our{" "}
-            <Link href="/terms" className="underline underline-offset-2">
-              Terms
-            </Link>{" "}
-            and{" "}
+            We keep your email and a hashed password.{" "}
             <Link href="/privacy" className="underline underline-offset-2">
-              Privacy Policy
+              Privacy policy
             </Link>
-            .
           </span>
         </>
       }
@@ -119,74 +119,17 @@ export default function SignUpPage() {
           />
         </div>
 
-        {/* Email/Password Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className="bg-card border-border/60"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Minimum 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-              className="bg-card border-border/60"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-              className="bg-card border-border/60"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-destructive font-medium">{error}</p>
-          )}
-
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
-          >
-            {isLoading ?
-              <Loader2 className="h-4 w-4 animate-spin" />
-            : <UserPlus className="h-4 w-4" />}
-            {isLoading ? "Creating account..." : "Create Account"}
-          </Button>
-        </form>
-
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border/40" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Minimum 8 characters"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm-password">Confirm password</Label>

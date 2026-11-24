@@ -108,16 +108,16 @@ export class AuthService {
   }
 
   /** Face-login demo: a password-less account enrolled as its own subject. */
-  async register(email: string, image: Buffer) {
+  async register(email: string, images: Buffer[]) {
     await this.assertEmailFree(email);
-    const embedding = await this.ml.vectorize(image);
+    const template = await this.ml.enroll(images);
 
     const user = await this.db.transaction(async (tx) => {
       const [created] = await tx
         .insert(schema.users)
         .values({ email })
         .returning();
-      await this.subjects.store(tx, created.id, SELF_SUBJECT, embedding, {
+      await this.subjects.store(tx, created.id, SELF_SUBJECT, template, {
         method: 'self-enrollment',
       });
       return created;

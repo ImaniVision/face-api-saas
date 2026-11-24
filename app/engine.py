@@ -7,10 +7,8 @@ import cv2
 import numpy as np
 import mediapipe as mp
 from insightface.app import FaceAnalysis
-from typing import Optional, Tuple, List
+from typing import List
 import logging
-
-from app.matching import MATCH_THRESHOLD, decide
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,11 +42,16 @@ class FaceEngine:
             )
             
             # Initialize InsightFace for embedding generation
+            # Only detection + recognition: buffalo_l's landmark and gender/age models don't affect the
+            # embedding (verified identical) but cost ~60 ms p50 / ~200 ms p95 per image on CPU.
             self.face_analyzer = FaceAnalysis(
                 name='buffalo_l',  # High-quality model
+                allowed_modules=['detection', 'recognition'],
                 providers=['CPUExecutionProvider']  # Use GPU if available: ['CUDAExecutionProvider', 'CPUExecutionProvider']
             )
-            self.face_analyzer.prepare(ctx_id=0, det_size=(640, 640))
+            # 320x320 detection: 45 ms vs 189 ms at 640 on CPU. Re-validated on LFW before adopting
+            # (FRR 2.1% vs 2.2%, 0 false accepts in 155k): spikes/ironmask/RESULTS.md.
+            self.face_analyzer.prepare(ctx_id=0, det_size=(320, 320))
             
             FaceEngine._initialized = True
             logger.info("FaceEngine initialized successfully!")
@@ -123,23 +126,6 @@ class FaceEngine:
         
         # Convert to list for JSON serialization
         return embedding.tolist()
-    
-    def verify_match(
-        self,
-        current_image_bytes: bytes,
-        saved_vector: List[float],
-    ) -> Tuple[bool, float]:
-        """
-        Verify a live image against a saved embedding. The decision (and τ) lives in
-        app.matching — this only produces the live embedding.
-
-        Raises:
-            ValueError: If face detection/embedding fails
-        """
-        current_vector = self.image_to_vector(current_image_bytes)
-        is_match, similarity = decide(saved_vector, current_vector)
-        logger.info(f"Verification result: similarity={similarity:.4f}, threshold={MATCH_THRESHOLD}, match={is_match}")
-        return is_match, similarity
 
 
 # Global singleton instance

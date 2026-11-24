@@ -140,6 +140,21 @@
   }
 }
 
+/* Docs prose: the typography plugin isn't installed, so style the few elements the docs use. */
+@layer components {
+  .prose h3 {
+    @apply mt-8 mb-3 text-xl font-semibold text-foreground;
+  }
+  .prose p {
+    @apply my-4 leading-7 text-muted-foreground;
+  }
+  .prose :not(pre) > code {
+    @apply rounded bg-muted px-1.5 py-0.5 font-mono text-sm text-foreground;
+  }
+  .prose a {
+    @apply text-primary underline;
+  }
+}
 /* §3.1 hero blobs — CSS radial gradients, slow drift, off for reduced motion */
 @keyframes drift-a {
   from {

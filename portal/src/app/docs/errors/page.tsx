@@ -1,62 +1,54 @@
-const errors = [
-  { code: "400", message: "User already exists", when: "Registering an email that is already enrolled." },
-  { code: "400", message: "Image file is required", when: "Calling an image endpoint without the image part." },
-  { code: "400", message: "Failed to process image with ML service", when: "The image could not be vectorized. Retry with a clear, front-facing photo." },
-  { code: "401", message: "Invalid credentials", when: "Wrong email or password at sign-in." },
-  { code: "401", message: "No biometric data found", when: "The user exists but never enrolled a face." },
-  { code: "401", message: "Biometric verification failed", when: "The face did not match. No token is issued." },
-  { code: "401", message: "Missing API key", when: "No x-api-key header or Bearer key was sent." },
-  { code: "401", message: "Invalid or revoked API key", when: "The key is wrong or was revoked in the dashboard." },
-];
+const ERRORS: [string, string][] = [
+    ["400", "Something in the request is wrong: not exactly 5 enrollment photos, the same photo sent twice, a photo with no face or several faces, a photo that doesn't look like the others, or consent missing. The message says which."],
+    ["401", "Missing, malformed or revoked API key."],
+    ["404", "Nobody is enrolled under this ID."],
+    ["409", "This person was enrolled before protected templates existed. Enroll them again with 5 photos."],
+    ["413", "A photo is larger than 5 MB."],
+    ["415", "A photo isn't JPEG, PNG or WebP. We check the file contents, not its name."],
+    ["429", "Rate limit reached. Wait for the number of seconds in Retry-After."],
+    ["502", "The face service is down or returned something unexpected. Safe to retry."],
+    ["503", "The rate limiter is unavailable, so requests are refused rather than let through unmetered. Safe to retry."],
+]
 
 export default function ErrorsDocsPage() {
-  return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="font-display text-h1 font-semibold tracking-tight text-ink">
-          Errors
-        </h1>
-        <p className="mt-3 text-body leading-relaxed text-ink/60">
-          Every error below is one the API returns today.
-        </p>
-      </div>
+    return (
+        <div className="space-y-10">
+            <div>
+                <h1 className="text-4xl font-bold tracking-tight">Errors &amp; limits</h1>
+                <p className="mt-4 text-xl text-muted-foreground">
+                    Every error is JSON with a <code>message</code> you can show or log.
+                </p>
+            </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full min-w-[560px]">
-          <thead>
-            <tr className="border-b border-border bg-mist/60 text-left">
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-ink/50">Status</th>
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-ink/50">Message</th>
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-ink/50">When</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/60">
-            {errors.map((e, i) => (
-              <tr key={i}>
-                <td className="px-6 py-4 font-mono text-sm font-semibold text-ink">{e.code}</td>
-                <td className="px-6 py-4 font-mono text-[13px] text-ink/80">{e.message}</td>
-                <td className="px-6 py-4 text-sm text-ink/65">{e.when}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                        <tr>
+                            <th className="text-left p-4 w-20">Status</th>
+                            <th className="text-left p-4">Meaning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {ERRORS.map(([status, meaning]) => (
+                            <tr key={status} className="border-t">
+                                <td className="p-4 font-mono font-semibold">{status}</td>
+                                <td className="p-4 text-muted-foreground">{meaning}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
-      <section className="space-y-3">
-        <h2 className="font-display text-h2 font-semibold text-ink">Rate limits</h2>
-        <p className="text-sm leading-relaxed text-ink/65">
-          No rate limits are enforced yet. Limits will be announced here before
-          they take effect — nothing will start failing silently.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-display text-h2 font-semibold text-ink">Versioning</h2>
-        <p className="text-sm leading-relaxed text-ink/65">
-          The API is currently unversioned. When versioned endpoints ship,
-          breaking changes will only ever land in new major versions.
-        </p>
-      </section>
-    </div>
-  );
+            <div className="prose prose-slate dark:prose-invert max-w-none">
+                <h3>Rate limits</h3>
+                <p>
+                    Each API key can make 20 calls in a burst, refilled at 1 per second (60 a minute). Responses
+                    carry <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code> and{" "}
+                    <code>X-RateLimit-Reset</code>, and a 429 also carries <code>Retry-After</code>. Every call
+                    that passes authentication and the rate limit is counted on your usage page, including
+                    ones that fail later (a 400 for a bad photo still counts).
+                </p>
+            </div>
+        </div>
+    )
 }

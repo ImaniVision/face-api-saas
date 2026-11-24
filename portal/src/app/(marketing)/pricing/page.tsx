@@ -11,27 +11,27 @@ import {
 // No figures until unit economics are measured (§5.4). Prices stay unset.
 const rows = [
   {
-    name: "Login verification",
-    body: "One passwordless check that a returning user is who they claim to be.",
+    name: "Enrollment",
+    body: "Enroll a person from five photos into one protected IronMask template, with recorded consent.",
+  },
+  {
+    name: "1:1 verification",
+    body: "Check whether a new photo matches one enrolled person.",
   },
   {
     name: "Transaction step-up",
-    body: "One face check inside a risky action, decided by risk signals.",
-  },
-  {
-    name: "Liveness check",
-    body: "One proof-of-liveness run, alone or attached to a verification.",
+    body: "Evaluate payment risk rules and require a face check only when a rule fires.",
   },
 ];
 
 const faqs = [
   {
     q: "What counts as a check?",
-    a: "One API call to one endpoint: one login verification, one transaction step-up, or one liveness check. Retries caused by our errors never count.",
+    a: "One authenticated API call to enroll, verify, or evaluate a transaction. During the beta nothing is billed, and the usage log records every call with its status code.",
   },
   {
-    q: "Is sandbox usage free?",
-    a: "Sandbox access and pricing are confirmed when you talk to us. Nothing is billed before you agree a plan.",
+    q: "Can I test before integrating?",
+    a: "Yes. You can run the full stack locally with Docker or try the Live Test console in the dashboard. Nothing is billed during the beta.",
   },
   {
     q: "Are there volume tiers?",

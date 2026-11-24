@@ -17,12 +17,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Imani Vision — Facial Verification API",
+  title: "Imani Vision: 1:1 face verification API",
   description:
-    "Verify logins, approve transactions, and run liveness checks with face templates that can't be turned back into a face.",
+    "Enroll a person from 5 photos, then check whether a new photo is the same person. Stored templates can't be turned back into a face.",
 };
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { PrivacyNotice } from "@/components/privacy-notice";
 
 export default function RootLayout({
   children,
@@ -50,6 +51,7 @@ export default function RootLayout({
           >
             {children}
             <Toaster richColors position="bottom-right" />
+            <PrivacyNotice />
           </ThemeProvider>
         </body>
       </html>

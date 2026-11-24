@@ -46,16 +46,18 @@ RUN apt-get remove -y build-essential && \
     apt-get autoremove -y && \
     apt-get clean
 
-# 4. Download Models
+# 4. Unprivileged user
+RUN useradd -m -u 1000 mluser
+USER mluser
+
+# 5. Download Models
+# As mluser, so they land in the home the service reads (~/.insightface) and ship in the image.
+# Downloaded as root, they went to /root and every new container re-downloaded them at startup.
 # We removed "|| true" -> If this fails, the build should fail.
 RUN python -c "from insightface.app import FaceAnalysis; app = FaceAnalysis(name='buffalo_l'); app.prepare(ctx_id=0)"
 
-# 5. Setup App
-COPY ./app ./app
-
-# 6. Security
-RUN useradd -m -u 1000 mluser && chown -R mluser:mluser /app
-USER mluser
+# 6. Setup App
+COPY --chown=mluser:mluser ./app ./app
 
 EXPOSE 8000
 
