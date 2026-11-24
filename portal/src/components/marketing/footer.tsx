@@ -43,8 +43,8 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink/60">
-              Facial verification for login, transactions, and routine liveness
-              checks. Verify continuously, store nothing recoverable.
+              1:1 face verification and risk-based transaction step-up. Verify
+              continuously, store nothing recoverable.
             </p>
           </div>
           {columns.map((col) => (

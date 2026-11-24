@@ -38,9 +38,9 @@ export default function AboutPage() {
           <h2 className="font-display text-h2 font-semibold text-ink">What we build.</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
-              { name: "Login verification", body: "Passwordless entry for returning users, matched against a protected template." },
-              { name: "Transaction step-up", body: "One call that asks for a face when risk signals say the action needs it." },
-              { name: "Liveness check", body: "Routine proof of a live person, with deepfake and replay detection built in." },
+              { name: "1:1 verification", body: "Confirm a returning user against their enrolled template — never 1:N search." },
+              { name: "Transaction step-up", body: "One call that asks for a face when risk rules say a payment needs it." },
+              { name: "Protected templates", body: "IronMask cancelable templates (SHA-256 hash + 512×512 rotation). Photos and raw embeddings are never stored." },
             ].map((p) => (
               <div key={p.name} className="rounded-xl border border-border p-6">
                 <h3 className="font-display text-h3 font-semibold text-ink">{p.name}</h3>
@@ -56,14 +56,16 @@ export default function AboutPage() {
             <div className="rounded-xl bg-white p-6">
               <p className="font-mono text-caption text-signal">Now</p>
               <p className="mt-2 text-sm leading-relaxed text-ink/65">
-                Login verification, transaction step-up, and liveness checks on
-                non-reversible templates.
+                1:1 face verification, 5-photo enrollment with consent, and
+                risk-based transaction step-up on non-reversible IronMask
+                templates.
               </p>
             </div>
             <div className="rounded-xl bg-white p-6">
               <p className="font-mono text-caption text-ink/40">Later</p>
               <p className="mt-2 text-sm leading-relaxed text-ink/65">
-                Onboarding identity checks. Logins and transactions come first.
+                Liveness and spoof detection, deepfake detection, and broader
+                demographic evaluation.
               </p>
             </div>
           </div>
